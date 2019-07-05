@@ -1,7 +1,10 @@
+
+extern crate rand;
 extern crate image;
 use image::{ImageBuffer, Rgb};
 
 mod vec3;
+mod matrix;
 mod ray;
 mod object;
 mod sphere;
@@ -69,35 +72,35 @@ impl Frame {
 }
 
 
-
-
-
 fn ray_trace() -> Frame {
     
     println!("Tracing scene...");
     
     let mut ray_frame = Frame::new(RESOLUTION,RESOLUTION);
-    let objs: Vec<Box<dyn Object>> = vec![ Box::new(Sphere {
-        position: Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -3.0
-        },
-        radius: 1.0
-    }) ];
+    let mut objs: Vec<Box<dyn Object>> = Vec::new();
+    for _ in 0..10 {
+        objs.push(Box::new(Sphere {
+            position: Vec3 {
+                x: (rand::random::<u8>() % 10) as f32 - 5.0,
+                y: (rand::random::<u8>() % 10) as f32 - 5.0,
+                z: (rand::random::<u8>() % 10) as f32 - 15.0,
+            },
+            radius: 1.0
+        }))
+    }
 
     for x in 0..RESOLUTION {
         for y in 0..RESOLUTION {
             let ray = ray_frame.pixel_to_ray(&(x, y));
 
             for obj in &objs {
-                match obj.intersects(&ray) {
+                match obj.intersection(&ray) {
                     Some(distance) => {
                         if x == 0 && y == 0 {
                             println!("{:?}", distance);
                         }
 
-                        ray_frame.buffer[x as usize][y as usize] = Color(0, (255.0 - (distance * 100.0)) as u8, 0)
+                        ray_frame.buffer[x as usize][y as usize] = Color(0, (255.0 - (distance * 10.0)) as u8, 0)
                     },
                     _ => ()
                 }

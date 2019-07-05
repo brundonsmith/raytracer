@@ -42,7 +42,7 @@ impl std::ops::Add for &Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Self) -> Self::Output {
-        Vec3 {
+         Self::Output {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z

@@ -36,7 +36,7 @@ impl Sphere {
 
 impl Object for Sphere {
 
-    fn intersects(&self, ray: &Ray) -> Option<f32> {
+    fn intersection(&self, ray: &Ray) -> Option<f32> {
         
         // analytic solution
         let L: Vec3 = &ray.origin - &self.position;
@@ -63,29 +63,6 @@ impl Object for Sphere {
             },
             None => None
         };
-
-
-        /*
-        float t0, t1; // solutions for t if the ray intersects
-
-        // analytic solution
-        Vec3f L = orig - center;
-        float a = dir.dotProduct(dir);
-        float b = 2 * dir.dotProduct(L);
-        float c = L.dotProduct(L) - radius2;
-        if (!solveQuadratic(a, b, c, t0, t1)) return false;
-
-        if (t0 > t1) std::swap(t0, t1);
-
-        if (t0 < 0) {
-        t0 = t1; // if t0 is negative, let's use t1 instead
-        if (t0 < 0) return false; // both t0 and t1 are negative
-        }
-
-        t = t0;
-
-        return true; 
-        */
     }
 }
 
@@ -97,7 +74,7 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {
 
     if discr < 0.0 {
         return None;
-    } else if discr.abs() < 0.0001 { // discr == 0.0
+    } else if discr == 0.0 {//discr.abs() < 0.0001 {
         t0 = -0.5 * b / a;
         t1 = t0;
     } else {
@@ -117,21 +94,4 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {
     }
 
     return Some((t0, t1));
-
-
-    /*
-    float discr = b * b - 4 * a * c;
-    if (discr < 0) return false;
-    else if (discr == 0) x0 = x1 = - 0.5 * b / a;
-    else {
-    float q = (b > 0) ?
-    -0.5 * (b + sqrt(discr)) :
-    -0.5 * (b - sqrt(discr));
-    x0 = q / a;
-    x1 = c / q;
-    }
-    if (x0 > x1) std::swap(x0, x1);
-
-    return true; 
-    */
 }
