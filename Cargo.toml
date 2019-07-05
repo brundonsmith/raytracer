@@ -1,0 +1,9 @@
+[package]
+name = "raytracer"
+version = "0.1.0"
+authors = ["Brandon Smith <mail@brandonsmith.ninja>"]
+edition = "2018"
+
+[dependencies]
+nannou = "0.9.0"
+image = "0.21.2"
