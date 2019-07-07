@@ -3,16 +3,18 @@ extern crate rand;
 extern crate image;
 use image::{ImageBuffer, Rgb};
 
+mod color;
 mod vec3;
 mod matrix;
 mod ray;
 mod object;
 mod sphere;
 
+use color::Color;
 use vec3::Vec3;
 use ray::Ray;
 use sphere::Sphere;
-use object::Object;
+use object::{Object,MaterialType};
 
 const RESOLUTION: usize = 512;
 const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
@@ -25,11 +27,8 @@ const CAMERA_TOP_LEFT: Vec3 = Vec3 {
     z: CAMERA_POSITION.z - FOCAL_LENGTH
 };
 // TODO: Camera transformation via matrix
-
-
-#[derive(Debug, Copy, Clone)]
-struct Color(u8,u8,u8);
-
+const MAX_DEPTH: u8 = 4;
+const BACKGROUND_COLOR: Color = Color(0, 0, 0);
 
 struct Frame {
     pub buffer: Vec<Vec<Color>>,
@@ -85,29 +84,16 @@ fn ray_trace() -> Frame {
                 y: (rand::random::<u8>() % 10) as f32 - 5.0,
                 z: (rand::random::<u8>() % 10) as f32 - 15.0,
             },
-            radius: 1.0
+            radius: 1.0,
+            material_type: MaterialType::Diffuse,
+            color: Color(rand::random::<u8>(), rand::random::<u8>(), rand::random::<u8>())
         }))
     }
 
     for x in 0..RESOLUTION {
         for y in 0..RESOLUTION {
             let ray = ray_frame.pixel_to_ray(&(x, y));
-
-            for obj in &objs {
-                match obj.intersection(&ray) {
-                    Some(distance) => {
-                        if x == 0 && y == 0 {
-                            println!("{:?}", distance);
-                        }
-
-                        ray_frame.buffer[x as usize][y as usize] = Color(0, (255.0 - (distance * 10.0)) as u8, 0)
-                    },
-                    _ => ()
-                }
-            }
-
-            //println!("{:?}", ray);
-            //ray_frame.buffer[x as usize][y as usize] = Color((ray.direction.x.abs() * 100.0) as u8, (ray.direction.y.abs() * 100.0) as u8, (ray.direction.z.abs() * 100.0) as u8);
+            ray_frame.buffer[x as usize][y as usize] = cast_ray(&ray, &objs, 0);
         }
     }
 
@@ -115,6 +101,33 @@ fn ray_trace() -> Frame {
 
     return ray_frame;
 }
+
+fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
+    let mut nearest_distance = std::f32::INFINITY;
+    let mut nearest_color = BACKGROUND_COLOR;
+
+    for obj in objs {
+        match obj.intersection(&ray) {
+            Some(distance) => {
+                if distance < nearest_distance {
+                    nearest_distance = distance;
+                    nearest_color = &obj.color() * ((255.0 - (distance * 10.0)) / 255.0);
+                    /*
+                    match obj.material_type() {
+                        Diffuse => &obj.color() * (255.0 - (distance * 10.0)),
+                        Reflective => cast_ray(...),
+                        Transparent => (),
+                        Light => &obj.color()
+                    }*/
+                }
+            },
+            _ => ()
+        }
+    }
+
+    return nearest_color;
+}
+
 
 
 

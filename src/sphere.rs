@@ -1,19 +1,24 @@
 
+use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::object::Object;
+use crate::object::{Object,MaterialType};
 
 pub struct Sphere {
     pub position: Vec3,
-    pub radius: f32
+    pub radius: f32,
+    pub material_type: MaterialType,
+    pub color: Color
 }
 
 impl Sphere {
 
-    pub fn new(position: Vec3, radius: f32) -> Self {
+    pub fn new(position: Vec3, radius: f32, material_type: MaterialType, color: Color) -> Self {
         Self {
             position,
-            radius
+            radius,
+            material_type,
+            color
         }
     }
 
@@ -63,6 +68,14 @@ impl Object for Sphere {
             },
             None => None
         };
+    }
+
+    fn material_type(&self) -> MaterialType {
+        self.material_type
+    }
+
+    fn color(&self) -> Color {
+        self.color
     }
 }
 
