@@ -3,12 +3,14 @@ use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::object::{Object,MaterialType,Intersection};
+use crate::texture_checkered::TextureCheckered;
 
 pub struct Sphere {
     pub position: Vec3,
     pub radius: f32,
     pub material_type: MaterialType,
-    pub color: Color
+    pub color: Color,
+    pub texture: TextureCheckered,
 }
 
 impl Sphere {
@@ -77,6 +79,20 @@ impl Object for Sphere {
     fn color(&self) -> Color {
         self.color
     }
+
+    fn texture(&self) -> &TextureCheckered {
+        &self.texture
+    }
+
+    fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
+        let relative_point = point - &self.position;
+
+        let latitude = (relative_point.y / self.radius).acos();
+        let longitude = (relative_point.z / relative_point.x).atan();
+
+        return (latitude, longitude);
+    }
+
 }
 
 fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {

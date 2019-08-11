@@ -4,17 +4,21 @@ extern crate image;
 use image::{ImageBuffer, Rgb};
 
 mod color;
-mod vec3;
 mod matrix;
-mod ray;
 mod object;
+mod ray;
 mod sphere;
+mod texture_checkered;
+mod texture;
+mod vec3;
 
 use color::Color;
 use vec3::Vec3;
 use ray::Ray;
 use sphere::Sphere;
 use object::{Object,MaterialType};
+use texture_checkered::TextureCheckered;
+use texture::Texture;
 
 const RESOLUTION: usize = 512;
 const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
@@ -86,7 +90,8 @@ fn ray_trace() -> Frame {
             },
             radius: 1.0,
             material_type: MaterialType::Diffuse,
-            color: Color(rand::random::<u8>(), rand::random::<u8>(), rand::random::<u8>())
+            color: Color(rand::random::<u8>(), rand::random::<u8>(), rand::random::<u8>()),
+            texture: TextureCheckered::new(),
         }))
     }
 
@@ -117,8 +122,14 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
                     
                     const MAX_DISTANCE: f32 = 60.0; // objects this far away are black
                     let distance_shade = 1.0 - intersection.distance / MAX_DISTANCE;
-                    
-                    nearest_color = &obj.color() * (distance_shade * normal_shade);
+
+                    let uv = obj.texture_coordinate(&intersection.position);
+                    let checker_color = obj.texture().color_at(uv.0, uv.1);
+                    // HACK
+                    let checker_shade = checker_color.0 as f32 / 255.0;
+
+
+                    nearest_color = &obj.color() * (checker_shade * distance_shade * normal_shade);
 
                     /*
                     match obj.material_type() {
