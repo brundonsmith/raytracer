@@ -18,7 +18,7 @@ use object::{Object,MaterialType};
 
 const RESOLUTION: usize = 512;
 const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-const FOCAL_LENGTH: f32 = 1.0;
+const FOCAL_LENGTH: f32 = 2.0;
 const CAMERA_WIDTH: f32 = 2.0;
 const CAMERA_HEIGHT: f32 = 2.0;
 const CAMERA_TOP_LEFT: Vec3 = Vec3 { 
@@ -108,10 +108,17 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
 
     for obj in objs {
         match obj.intersection(&ray) {
-            Some(distance) => {
-                if distance < nearest_distance {
-                    nearest_distance = distance;
-                    nearest_color = &obj.color() * ((255.0 - (distance * 10.0)) / 255.0);
+            Some(intersection) => {
+                if intersection.distance < nearest_distance {
+                    nearest_distance = intersection.distance;
+
+                    let normal_angle = (&CAMERA_POSITION - &intersection.position).angle_to(&intersection.normal);
+                    let normal_shade = normal_angle / (std::f32::consts::PI / 2.0);
+                    
+                    let distance_shade = (255.0 - (intersection.distance * 10.0)) / 255.0;
+                    
+                    nearest_color = &obj.color() * (distance_shade * normal_shade);
+
                     /*
                     match obj.material_type() {
                         Diffuse => &obj.color() * (255.0 - (distance * 10.0)),
@@ -126,6 +133,12 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
     }
 
     return nearest_color;
+}
+
+fn clamp(num: f32, min: f32, max: f32) -> f32 {
+    if num > max { max } 
+    else if num < min { min } 
+    else { num }
 }
 
 

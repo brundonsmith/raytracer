@@ -2,7 +2,7 @@
 use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::object::{Object,MaterialType};
+use crate::object::{Object,MaterialType,Intersection};
 
 pub struct Sphere {
     pub position: Vec3,
@@ -12,15 +12,6 @@ pub struct Sphere {
 }
 
 impl Sphere {
-
-    pub fn new(position: Vec3, radius: f32, material_type: MaterialType, color: Color) -> Self {
-        Self {
-            position,
-            radius,
-            material_type,
-            color
-        }
-    }
 
     pub fn surface_point(&self, latitude: f32, longitude: f32) -> Vec3 {
         let lat_cos = latitude.cos();
@@ -41,13 +32,13 @@ impl Sphere {
 
 impl Object for Sphere {
 
-    fn intersection(&self, ray: &Ray) -> Option<f32> {
+    fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         
         // analytic solution
-        let L: Vec3 = &ray.origin - &self.position;
+        let l: Vec3 = &ray.origin - &self.position;
         let a: f32 = &ray.direction * &ray.direction;
-        let b: f32 = 2.0 * (&ray.direction * &L);
-        let c: f32 = &L * &L - self.radius_squared();
+        let b: f32 = 2.0 * (&ray.direction * &l);
+        let c: f32 = &l * &l - self.radius_squared();
 
         return match solve_quadratic(a, b, c) {
             Some((mut t0, mut t1)) => {
@@ -64,7 +55,16 @@ impl Object for Sphere {
                     }
                 }
 
-                return Some(t0);
+                let distance = t0;
+
+                let position = &ray.origin + &(&ray.direction * distance);
+                let normal = (&position - &self.position).normalized();
+
+                return Some(Intersection {
+                    distance,
+                    position,
+                    normal
+                });
             },
             None => None
         };
