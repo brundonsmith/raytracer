@@ -115,7 +115,8 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
                     let normal_angle = (&CAMERA_POSITION - &intersection.position).angle_to(&intersection.normal);
                     let normal_shade = normal_angle / (std::f32::consts::PI / 2.0);
                     
-                    let distance_shade = (255.0 - (intersection.distance * 10.0)) / 255.0;
+                    const MAX_DISTANCE: f32 = 60.0; // objects this far away are black
+                    let distance_shade = 1.0 - intersection.distance / MAX_DISTANCE;
                     
                     nearest_color = &obj.color() * (distance_shade * normal_shade);
 
