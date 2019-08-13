@@ -1,9 +1,12 @@
 
+use std::f32::consts::PI;
+
 use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::object::{Object,MaterialType,Intersection};
 use crate::texture::Texture;
+use crate::texture_checkered::TextureCheckered;
 
 pub struct Sphere<T: Texture> {
     pub position: Vec3,
@@ -87,13 +90,20 @@ impl<T: Texture> Object<T> for Sphere<T> {
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
         let relative_point = point - &self.position;
 
-        let latitude = (relative_point.y / self.radius).acos();
         let longitude = (relative_point.z / relative_point.x).atan();
+        let continuous_longitude = longitude 
+            + if relative_point.x < 0.0 { PI } else { 0.0 }
+            + if relative_point.x >= 0.0 && relative_point.z < 0.0 { 2.0 * PI } else { 0.0 };
 
-        return (latitude / (2.0 * std::f32::consts::PI), longitude / (2.0 * std::f32::consts::PI));
+        let latitude = (relative_point.y / self.radius).acos();
+
+        return (
+            continuous_longitude / (2.0 * PI), 
+            1.0 - latitude / PI
+        );
     }
-
 }
+
 
 fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {
     let discr = b * b - 4.0 * a * c;

@@ -12,8 +12,8 @@ pub struct TextureCheckered {
 impl TextureCheckered {
     pub fn new() -> Self {
         Self {
-            rows: 2,
-            cols: 2,
+            rows: 8,
+            cols: 8,
             color_1: Color(255, 255, 255),
             color_2: Color(200, 200, 200)
         }
@@ -38,8 +38,10 @@ impl Texture for TextureCheckered {
 fn test() {
     let tex = TextureCheckered::new();
 
-    assert_eq!(tex.color_at(0.1, 0.1), Color(255, 255, 255));
-    assert_eq!(tex.color_at(0.4, 0.1), Color(200, 200, 200));
-    assert_eq!(tex.color_at(0.1, 0.4), Color(200, 200, 200));
+    assert_eq!(tex.color_at(0.01, 0.01), Color(255, 255, 255));
+    assert_eq!(tex.color_at(0.4, 0.01), Color(200, 200, 200));
+    assert_eq!(tex.color_at(0.01, 0.4), Color(200, 200, 200));
+    assert_eq!(tex.color_at(0.4, 0.4), Color(255, 255, 255));
+    assert_eq!(tex.color_at(0.01, 0.4), Color(200, 200, 200));
     assert_eq!(tex.color_at(0.4, 0.4), Color(255, 255, 255));
 }
