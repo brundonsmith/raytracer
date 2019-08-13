@@ -80,7 +80,7 @@ fn ray_trace() -> Frame {
     println!("Tracing scene...");
     
     let mut ray_frame = Frame::new(RESOLUTION,RESOLUTION);
-    let mut objs: Vec<Box<dyn Object>> = Vec::new();
+    let mut objs: Vec<Box<dyn Object<TextureCheckered>>> = Vec::new();
     for _ in 0..10 {
         objs.push(Box::new(Sphere {
             position: Vec3 {
@@ -107,7 +107,7 @@ fn ray_trace() -> Frame {
     return ray_frame;
 }
 
-fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object>>, depth: u8) -> Color {
+fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object<TextureCheckered>>>, depth: u8) -> Color {
     let mut nearest_distance = std::f32::INFINITY;
     let mut nearest_color = BACKGROUND_COLOR;
 

@@ -3,17 +3,17 @@ use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::object::{Object,MaterialType,Intersection};
-use crate::texture_checkered::TextureCheckered;
+use crate::texture::Texture;
 
-pub struct Sphere {
+pub struct Sphere<T: Texture> {
     pub position: Vec3,
     pub radius: f32,
     pub material_type: MaterialType,
     pub color: Color,
-    pub texture: TextureCheckered,
+    pub texture: T,
 }
 
-impl Sphere {
+impl<T: Texture> Sphere<T> {
 
     pub fn surface_point(&self, latitude: f32, longitude: f32) -> Vec3 {
         let lat_cos = latitude.cos();
@@ -32,7 +32,7 @@ impl Sphere {
     }
 }
 
-impl Object for Sphere {
+impl<T: Texture> Object<T> for Sphere<T> {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         
@@ -80,7 +80,7 @@ impl Object for Sphere {
         self.color
     }
 
-    fn texture(&self) -> &TextureCheckered {
+    fn texture(&self) -> &T {
         &self.texture
     }
 
@@ -90,7 +90,7 @@ impl Object for Sphere {
         let latitude = (relative_point.y / self.radius).acos();
         let longitude = (relative_point.z / relative_point.x).atan();
 
-        return (latitude, longitude);
+        return (latitude / (2.0 * std::f32::consts::PI), longitude / (2.0 * std::f32::consts::PI));
     }
 
 }
