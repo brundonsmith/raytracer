@@ -1,27 +1,24 @@
 
-use crate::color::Color;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
-use crate::texture::Texture;
+use crate::material::Material;
+use crate::intersection::Intersection;
 
-pub struct Intersection {
-    pub distance: f32,
-    pub position: Vec3,
-    pub normal: Vec3,
-}
+pub trait Object {
 
-pub trait Object<T: Texture> {
+    /**
+     * Get information about the point where a ray intersects this object, 
+     * if it does at all.
+     */
     fn intersection(&self, ray: &Ray) -> Option<Intersection>;
-    fn material_type(&self) -> MaterialType;
-    fn color(&self) -> Color;
-    fn texture(&self) -> &T;
-    fn texture_coordinate(&self, point: &Vec3) -> (f32,f32);
-}
 
-#[derive(Debug, Copy, Clone)]
-pub enum MaterialType {
-    Diffuse,
-    Reflective,
-    Transparent,
-    Light
+    /**
+     * Get the UV coordinate on this object's texture for a given 
+     * world-space coordinate.
+     */
+    fn texture_coordinate(&self, point: &Vec3) -> (f32,f32);
+
+    fn get_position(&self) -> &Vec3;
+
+    fn get_material(&self) -> &Material;
 }

@@ -11,7 +11,15 @@ pub struct Vec3 {
 impl Vec3 {
 
     pub fn new() -> Self {
-        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        Self { x: 0.0, y: 0.0, z: 0.0 }
+    }
+
+    pub fn from_angles(alpha: f32, beta: f32) -> Self {
+        Self {
+            x: alpha.cos() * beta.cos(),
+            y: beta.sin(),
+            z: alpha.sin() * beta.cos(),
+        }
     }
 
     pub fn len(&self) -> f32 {
@@ -20,9 +28,7 @@ impl Vec3 {
 
     pub fn normalize(&mut self) {
         let len = self.len();
-        self.x /= len;
-        self.y /= len;
-        self.z /= len;
+        self.scale(1.0 / len);
     }
 
     pub fn normalized(&self) -> Vec3 {
@@ -30,6 +36,12 @@ impl Vec3 {
         result.normalize();
         return result;
     }
+
+    pub fn scale(&mut self, scale: f32) {
+        self.x *= scale;
+        self.y *= scale;
+        self.z *= scale;
+    } 
 
     pub fn angle_to(&self, other: &Vec3) -> f32 {
         (self * other) / (self.len() * other.len())

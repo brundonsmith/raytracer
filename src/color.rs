@@ -1,28 +1,40 @@
 
+use crate::utils::{avg,clamp};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Color(pub u8, pub u8, pub u8);
+pub struct Color(pub f32, pub f32, pub f32);
 
-impl std::ops::Mul<&Color> for &Color {
+impl Color {
+
+    pub fn to_u8(&self) -> [u8;3] {
+        [ 
+            clamp(self.0 * 255.0, 0.0, 255.0) as u8, 
+            clamp(self.1 * 255.0, 0.0, 255.0) as u8, 
+            clamp(self.2 * 255.0, 0.0, 255.0) as u8 
+        ]
+    }
+}
+
+impl std::ops::Mul<Color> for Color {
     type Output = Color;
     
-    fn mul(self, other: &Color) -> Self::Output {
+    fn mul(self, other: Color) -> Self::Output {
         Color (
-            (self.0 as f32 * other.0 as f32).round() as u8, 
-            (self.1 as f32 * other.1 as f32).round() as u8, 
-            (self.2 as f32 * other.2 as f32).round() as u8, 
+            avg(self.0, other.0), 
+            avg(self.1, other.1), 
+            avg(self.2, other.2), 
         )
     }
 }
 
-impl std::ops::Mul<f32> for &Color {
+impl std::ops::Mul<f32> for Color {
     type Output = Color;
     
     fn mul(self, scale: f32) -> Self::Output {
         Color (
-            (self.0 as f32 * scale).round() as u8, 
-            (self.1 as f32 * scale).round() as u8, 
-            (self.2 as f32 * scale).round() as u8, 
+            self.0 * scale, 
+            self.1 * scale, 
+            self.2 * scale, 
         )
     }
 }

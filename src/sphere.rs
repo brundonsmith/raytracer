@@ -1,22 +1,19 @@
 
 use std::f32::consts::PI;
 
-use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::object::{Object,MaterialType,Intersection};
-use crate::texture::Texture;
-use crate::texture_checkered::TextureCheckered;
+use crate::object::Object;
+use crate::intersection::Intersection;
+use crate::material::Material;
 
-pub struct Sphere<T: Texture> {
+pub struct Sphere {
     pub position: Vec3,
     pub radius: f32,
-    pub material_type: MaterialType,
-    pub color: Color,
-    pub texture: T,
+    pub material: Material,
 }
 
-impl<T: Texture> Sphere<T> {
+impl Sphere {
 
     pub fn surface_point(&self, latitude: f32, longitude: f32) -> Vec3 {
         let lat_cos = latitude.cos();
@@ -35,7 +32,7 @@ impl<T: Texture> Sphere<T> {
     }
 }
 
-impl<T: Texture> Object<T> for Sphere<T> {
+impl Object for Sphere {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         
@@ -64,27 +61,17 @@ impl<T: Texture> Object<T> for Sphere<T> {
 
                 let position = &ray.origin + &(&ray.direction * distance);
                 let normal = (&position - &self.position).normalized();
+                let direction = ray.direction;
 
                 return Some(Intersection {
                     distance,
                     position,
-                    normal
+                    normal,
+                    direction
                 });
             },
             None => None
         };
-    }
-
-    fn material_type(&self) -> MaterialType {
-        self.material_type
-    }
-
-    fn color(&self) -> Color {
-        self.color
-    }
-
-    fn texture(&self) -> &T {
-        &self.texture
     }
 
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
@@ -101,6 +88,14 @@ impl<T: Texture> Object<T> for Sphere<T> {
             continuous_longitude / (2.0 * PI), 
             1.0 - latitude / PI
         );
+    }
+
+    fn get_position(&self) -> &Vec3 {
+        &self.position
+    }
+
+    fn get_material(&self) -> &Material {
+        &self.material
     }
 }
 

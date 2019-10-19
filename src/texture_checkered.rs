@@ -2,6 +2,10 @@
 use crate::color::Color;
 use crate::texture::Texture;
 
+/**
+ * A texture consisting of a rectangular grid of cells alternating
+ * between two colors.
+ */
 pub struct TextureCheckered {
     pub rows: u32,
     pub cols: u32,
@@ -14,18 +18,18 @@ impl TextureCheckered {
         Self {
             rows: 8,
             cols: 8,
-            color_1: Color(255, 255, 255),
-            color_2: Color(200, 200, 200)
+            color_1: Color(1.0, 1.0, 1.0),
+            color_2: Color(0.5, 0.5, 0.5)
         }
     }
 }
 
 impl Texture for TextureCheckered {
-    fn color_at(&self, u: f32, v: f32) -> Color {
-        let scaled_u = (u * self.cols as f32) as u32;
+    fn color_at(&self, uv: (f32,f32)) -> Color {
+        let scaled_u = (uv.0 * self.cols as f32) as u32;
         let u_is_base = scaled_u % 2 == 0;
 
-        let scaled_v = (v * self.cols as f32) as u32;
+        let scaled_v = (uv.1 * self.cols as f32) as u32;
         let v_is_base = scaled_v % 2 == 0;
 
         return if u_is_base == v_is_base { self.color_1 }
@@ -38,10 +42,10 @@ impl Texture for TextureCheckered {
 fn test() {
     let tex = TextureCheckered::new();
 
-    assert_eq!(tex.color_at(0.01, 0.01), Color(255, 255, 255));
-    assert_eq!(tex.color_at(0.4, 0.01), Color(200, 200, 200));
-    assert_eq!(tex.color_at(0.01, 0.4), Color(200, 200, 200));
-    assert_eq!(tex.color_at(0.4, 0.4), Color(255, 255, 255));
-    assert_eq!(tex.color_at(0.01, 0.4), Color(200, 200, 200));
-    assert_eq!(tex.color_at(0.4, 0.4), Color(255, 255, 255));
+    assert_eq!(tex.color_at((0.01, 0.01)), Color(1.0, 1.0, 1.0));
+    assert_eq!(tex.color_at((0.4, 0.01)), Color(0.5, 0.5, 0.5));
+    assert_eq!(tex.color_at((0.01, 0.4)), Color(0.5, 0.5, 0.5));
+    assert_eq!(tex.color_at((0.4, 0.4)), Color(1.0, 1.0, 1.0));
+    assert_eq!(tex.color_at((0.01, 0.4)), Color(0.5, 0.5, 0.5));
+    assert_eq!(tex.color_at((0.4, 0.4)), Color(1.0, 1.0, 1.0));
 }
