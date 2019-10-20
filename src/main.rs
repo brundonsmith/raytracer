@@ -8,6 +8,7 @@ extern crate crossbeam;
 
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
+use std::io::Write;
 
 mod color;
 mod illumination;
@@ -33,11 +34,14 @@ use object::{Object};
 use texture_checkered::TextureCheckered;
 use texture_blank::TextureBlank;
 
-const RESOLUTION: usize = 256;
-const SAMPLE_COUNT: usize = 256;
-const MAX_DEPTH: u8 = 2;
-const THREADS: usize = 4;
 
+// fidelity/tuning
+const RESOLUTION: usize = 128;
+const SAMPLE_COUNT: usize = 128;
+const MAX_DEPTH: u8 = 2;
+const CELLS: usize = 16; // must be the square of an integer
+
+// camera
 const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 const FOCAL_LENGTH: f32 = 2.0;
 const CAMERA_WIDTH: f32 = 2.0;
@@ -48,9 +52,10 @@ const CAMERA_TOP_LEFT: Vec3 = Vec3 {
     z: CAMERA_POSITION.z - FOCAL_LENGTH
 };
 
+// misc
 const LIGHT_DIRECTION: Vec3 = Vec3{ x: 1.0, y: 1.0, z: -1.0 };
-
 const BACKGROUND_COLOR: Color = Color(0.0, 0.0, 0.0);
+
 
 struct Frame {
     pub buffer: Vec<Vec<Color>>,
@@ -139,56 +144,83 @@ fn ray_trace<'a>() -> Frame {
     }
 
     // Create frame
-    let mut ray_frame = Frame::new(RESOLUTION,RESOLUTION);
-    let mutex_ray_frame: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut ray_frame));
+    let mut frame = Frame::new(RESOLUTION,RESOLUTION);
+    let mut cells_done = 0;
 
-    ray_trace_cell(&mut ray_frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
+    // Create thread wrappers
+    let objs_arc: Arc<&Vec<Box<dyn Object + Sync + Send>>> = Arc::new(&objs);
+    let frame_mutex_arc: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut frame));
+    let cells_done_mutex_arc = Arc::new(Mutex::new(&mut cells_done));
 
-    /*
+    let start = std::time::SystemTime::now();
+
+    // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
 
 
     crossbeam::scope(move |scope| {
-        let cell_size = RESOLUTION / THREADS;
-        for x_cell in 0..cell_size {
-            for y_cell in 0..cell_size {
-                let x_min = x_cell * cell_size;
-                let y_min = y_cell * cell_size;
-                let x_max = x_min + cell_size;
-                let y_max = y_min + cell_size;
-                
-                let rau_frame_ref = &ray_frame;
-                let ray_frame_mutex_ref = Arc::clone(&mutex_ray_frame);
+        let row_column_count = (CELLS as f32).sqrt().round() as usize;
+        let cell_size = RESOLUTION / row_column_count;
+
+        print!("0.00%");
+        std::io::stdout().flush().ok().expect("");
+
+        for x_cell in 0..row_column_count {
+            for y_cell in 0..row_column_count {
+                let objs_arc_clone = objs_arc.clone();
+                let frame_mutex_arc_clone = frame_mutex_arc.clone();
+                let cells_done_mutex_arc_clone = cells_done_mutex_arc.clone();
                 
                 scope.spawn(move |_| {
-                    ray_trace_cell()
+                    ray_trace_cell(
+                        frame_mutex_arc_clone, 
+                        objs_arc_clone, 
+                        x_cell * cell_size, 
+                        y_cell * cell_size, 
+                        (x_cell + 1) * cell_size, 
+                        (y_cell + 1) * cell_size
+                    );
+
+                    let mut cells_done = cells_done_mutex_arc_clone.lock().unwrap();
+                    **cells_done = (**cells_done) + 1;
+
+                    //println!("{}", **cells_done);
+                    print!("\r{}%           ", format!("{:.*}", 2, (**cells_done as f32 / CELLS as f32) * 100.0));
+                    std::io::stdout().flush().ok().expect("");
                 });
             }
         }
     }).unwrap();
-    */
+    
+    let end = std::time::SystemTime::now();
+    let total = end.duration_since(start).unwrap();
+    println!("Took {}s", total.as_millis() as f32 / 1000.0);
 
     println!("done");
 
-    return ray_frame;
+    return frame;
 }
 
-fn ray_trace_cell(frame: &mut Frame, objs: &Vec<Box<dyn Object + Sync + Send>>, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
+fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Object + Sync + Send>>>, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
     // Cast ray from each pixel
     for x in min_x..max_x {
         for y in min_y..max_y {
 
             // HACK: Too lazy to guarantee this right now
             if x < RESOLUTION && y < RESOLUTION {
+
+                let frame = frame_mutex.lock().unwrap();
                 let ray = frame.pixel_to_ray(&(x, y));
+                std::mem::drop(frame);
+
                 let illumination = cast_ray(&ray, &objs, MAX_DEPTH);
 
+                let mut frame = frame_mutex.lock().unwrap();
                 frame.buffer[x as usize][y as usize] = Color(
                     illumination.intensity,
                     illumination.intensity,
                     illumination.intensity
                 );
-
-                print!("\r{}% done           ", ((y + x * RESOLUTION) as f32 / (max_x * max_y) as f32) * 100.0);
+                std::mem::drop(frame);
             }
         }
     }
