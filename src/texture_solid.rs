@@ -6,11 +6,11 @@ use crate::texture::Texture;
  * A texture consisting of a rectangular grid of cells alternating
  * between two colors.
  */
-pub struct TextureBlank {
+pub struct TextureSolid {
     color: Color,
 }
 
-impl TextureBlank {
+impl TextureSolid {
     pub fn new(color: Color) -> Self {
         Self {
             color
@@ -18,7 +18,7 @@ impl TextureBlank {
     }
 }
 
-impl Texture for TextureBlank {
+impl Texture for TextureSolid {
     fn color_at(&self, uv: (f32,f32)) -> Color {
         self.color
     }

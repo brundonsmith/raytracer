@@ -18,21 +18,22 @@ mod matrix;
 mod object;
 mod ray;
 mod sphere;
-mod texture_blank;
 mod texture_checkered;
+mod texture_solid;
 mod texture;
 mod utils;
 mod vec3;
 
 use color::Color;
 use illumination::{Illumination,integrate};
-use material::{Material,ShadingType};
+use intersection::Intersection;
+use material::Material;
 use vec3::Vec3;
 use ray::Ray;
 use sphere::Sphere;
 use object::{Object};
 use texture_checkered::TextureCheckered;
-use texture_blank::TextureBlank;
+use texture_solid::TextureSolid;
 
 
 // fidelity/tuning
@@ -53,8 +54,8 @@ const CAMERA_TOP_LEFT: Vec3 = Vec3 {
 };
 
 // misc
-const LIGHT_DIRECTION: Vec3 = Vec3{ x: 1.0, y: 1.0, z: -1.0 };
-const BACKGROUND_COLOR: Color = Color(0.0, 0.0, 0.0);
+const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
+//const GLOBAL_LIGHT_DIRECTION: Vec3 = Vec3{ x: 1.0, y: 1.0, z: -1.0 };
 
 
 struct Frame {
@@ -122,8 +123,9 @@ fn ray_trace<'a>() -> Frame {
         },
         radius: 1.0,
         material: Material {
-            shading_type: ShadingType::Light,
-            texture: Box::new(TextureBlank::new(Color(1.0, 0.0, 0.0))),
+            texture_albedo: None,
+            texture_specular: None,
+            texture_emission: Some(Box::new(TextureSolid::new(Color(1.0, 0.0, 0.0)))),
         }
     }));
     
@@ -137,8 +139,9 @@ fn ray_trace<'a>() -> Frame {
             },
             radius: 1.0,
             material: Material {
-                shading_type: ShadingType::Diffuse,
-                texture: Box::new(TextureCheckered::new()),
+                texture_albedo: Some(Box::new(TextureCheckered::new())),
+                texture_specular: None,
+                texture_emission: None,
             }
         }))
     }
@@ -227,77 +230,75 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Ob
 }
 
 fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, depth: u8) -> Illumination {
-    let mut nearest_distance = std::f32::INFINITY;
-    let mut nearest_illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
+    if depth <= 0 { return BACKGROUND_ILLUMINATION; }
+
+    let mut nearest_intersection: Option<Intersection> = None;
+    let mut nearest_object_index: Option<usize> = None;
     let mut rng = rand::thread_rng();
-
-    if depth <= 0 { return nearest_illumination; }
-
-    //let light_position = objs.iter().find(|x| x.get_material().shading_type == ShadingType::Light).unwrap().get_position();
 
     /**
      * Find the nearest object intersection for this ray, and then shade it.
      */
-    for obj in objs {
-        match obj.intersection(&ray) {
+    for index in 0..objs.len() {
+        match objs[index].intersection(&ray) {
             Some(intersection) => {
-                // TODO: Optimize by doing shading only once, after looping
-                if intersection.distance < nearest_distance {
-                    nearest_distance = intersection.distance;
-
-                    if obj.get_material().shading_type == ShadingType::Light {
-                        //println!("Found light!");
-                    }
-
-                    nearest_illumination = match obj.get_material().shading_type {
-                        ShadingType::Diffuse => {
-                            //println!("Diffuse");
-                            
-                            let mut samples: Vec<Illumination> = Vec::with_capacity(SAMPLE_COUNT);
-                            while samples.len() < SAMPLE_COUNT {
-                                let ray = Ray {
-                                    origin: intersection.position,
-                                    direction: Vec3::from_angles(
-                                        rng.gen_range(0.0, 1.0) * PI * 2.0, 
-                                        rng.gen_range(0.0, 1.0) * PI * 2.0
-                                    )
-                                };
-
-                                // HACK: Figure out a way to *generate* rays that are already within our desired area
-                                if ray.direction.angle_to(&intersection.normal) < (PI / 2.0) {
-                                    //println!("Sampled");
-                                    
-                                    // recurse
-                                    samples.push(cast_ray(&ray, objs, depth - 1));
-                                }
-                            }
-
-                            let mut illumination = integrate(samples.iter());
-                            //illumination.intensity *= 0.5; // HACK: Roughness. Need to represent this somehow.
-
-                            return illumination;
-                        },
-                        ShadingType::Light => Illumination { color: Color(1.0, 1.0, 1.0), intensity: 30.0 },
-                        _ => Illumination { color: Color(1.0, 0.0, 1.0), intensity: 1.0 }, // magenta; material "error"
-                    }
-                    
-                    //let light_direction = &intersection.position - light_position;
-                    //let incident = clamp((&light_direction * -1.0).angle_to(&intersection.normal) / (PI / 2.0), 0.0, 1.0);
-                    /*
-                    let incident = clamp((&LIGHT_DIRECTION * -1.0).angle_to(&intersection.normal) / (PI / 2.0), 0.0, 1.0);
-                    
-                    nearest_illumination = Illumination { color: obj.get_material().shade(
-                        incident,
-                        Illumination { color: Color(1.0, 1.0, 1.0), intensity: 1.0 }, 
-                        obj.texture_coordinate(&intersection.position)
-                    ), intensity: 1.0 };*/
+                if intersection.distance < nearest_intersection.as_ref().map(|int| int.distance).unwrap_or(std::f32::INFINITY) {
+                    nearest_intersection = Some(intersection);
+                    nearest_object_index = Some(index);
                 }
             },
             _ => ()
         }
     }
 
-    return nearest_illumination;
+    let nearest_illumination = nearest_intersection.map(|intersection| {
+        let obj = nearest_object_index.map(|index| &objs[index]).unwrap();
+        let uv = obj.texture_coordinate(&intersection.position);
+
+        // HACK: This is a weird relationship between Material and cast_ray; assumption is made that 
+        // if a texture exists, the corresponding illumination will be passed to shade(). Can
+        // probably be improved somehow.
+        let diffuse_illumination: Option<Illumination> = if obj.get_material().texture_albedo.is_some() {
+            let mut samples = Vec::with_capacity(SAMPLE_COUNT);
+
+            while samples.len() < SAMPLE_COUNT {
+                let ray = Ray {
+                    origin: intersection.position,
+                    direction: Vec3::from_angles(
+                        rng.gen_range(0.0, 1.0) * PI * 2.0, 
+                        rng.gen_range(0.0, 1.0) * PI * 2.0
+                    )
+                };
+
+                // HACK: Figure out a way to *generate* rays that are already within our desired area
+                if ray.direction.angle_to(&intersection.normal) < (PI / 2.0) {
+                    
+                    // recurse
+                    samples.push(cast_ray(&ray, objs, depth - 1));
+                }
+            }
+
+            let illumination = integrate(samples.iter());
+
+            Some(illumination)
+        } else {
+            None
+        };
+
+        let specular_illumination = match &obj.get_material().texture_specular {
+            Some(_) => None, // TODO
+            None => None,
+        };
+
+        obj.get_material().shade(
+            intersection, 
+            uv, 
+            diffuse_illumination, 
+            specular_illumination
+        )
+    });
+
+    return nearest_illumination.unwrap_or(BACKGROUND_ILLUMINATION);
 }
 
 /*

@@ -7,6 +7,15 @@ pub struct Illumination {
     pub intensity: f32,
 }
 
+impl Illumination {
+    pub fn new() -> Self {
+        Illumination {
+            color: Color(0.0, 0.0, 0.0),
+            intensity: 0.0,
+        }
+    }
+}
+
 pub fn integrate<'a,I: Iterator<Item = &'a Illumination>>(samples: I) -> Illumination {
     let mut count = 0;
     let mut lum = Illumination { color: Color(0.0,0.0,0.0), intensity: 0.0 };
