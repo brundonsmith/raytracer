@@ -29,7 +29,7 @@ impl Material {
 
         match &self.texture_albedo {
             Some(texture) => {
-                illumination.color = texture.color_at(uv);
+                illumination.color = diffuse_illumination.unwrap().color * texture.color_at(uv);
                 illumination.intensity = diffuse_illumination.unwrap().intensity * 0.5; // TODO: express roughness in data
             },
             _ => ()
@@ -37,7 +37,7 @@ impl Material {
 
         match &self.texture_specular {
             Some(texture) => {
-                illumination.color = texture.color_at(uv);
+                illumination.color = diffuse_illumination.unwrap().color * texture.color_at(uv);
                 illumination.intensity = specular_illumination.unwrap().intensity * 0.9; // TODO: express roughness in data
             },
             _ => ()
@@ -46,7 +46,7 @@ impl Material {
         match &self.texture_emission {
             Some(texture) => {
                 illumination.color = texture.color_at(uv);
-                illumination.intensity = 10.0; // TODO: Express brightness in data
+                illumination.intensity = 30.0; // TODO: Express brightness in data
             },
             _ => ()
         };

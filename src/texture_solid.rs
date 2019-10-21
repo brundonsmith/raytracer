@@ -7,13 +7,13 @@ use crate::texture::Texture;
  * between two colors.
  */
 pub struct TextureSolid {
-    color: Color,
+    pub color: Color,
 }
 
 impl TextureSolid {
-    pub fn new(color: Color) -> Self {
+    pub fn new() -> Self {
         Self {
-            color
+            color: Color(1.0, 1.0, 1.0)
         }
     }
 }

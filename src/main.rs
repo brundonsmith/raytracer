@@ -11,11 +11,13 @@ use std::sync::{Arc, Mutex};
 use std::io::Write;
 
 mod color;
+mod frame;
 mod illumination;
 mod intersection;
 mod material;
 mod matrix;
 mod object;
+mod plane;
 mod ray;
 mod sphere;
 mod texture_checkered;
@@ -25,13 +27,15 @@ mod utils;
 mod vec3;
 
 use color::Color;
+use frame::Frame;
 use illumination::{Illumination,integrate};
 use intersection::Intersection;
 use material::Material;
 use vec3::Vec3;
 use ray::Ray;
+use object::Object;
 use sphere::Sphere;
-use object::{Object};
+use plane::Plane;
 use texture_checkered::TextureCheckered;
 use texture_solid::TextureSolid;
 
@@ -42,69 +46,9 @@ const SAMPLE_COUNT: usize = 128;
 const MAX_DEPTH: u8 = 2;
 const CELLS: usize = 16; // must be the square of an integer
 
-// camera
-const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-const FOCAL_LENGTH: f32 = 2.0;
-const CAMERA_WIDTH: f32 = 2.0;
-const CAMERA_HEIGHT: f32 = 2.0;
-const CAMERA_TOP_LEFT: Vec3 = Vec3 { 
-    x: CAMERA_POSITION.x - CAMERA_WIDTH / 2.0, 
-    y: CAMERA_POSITION.y + CAMERA_HEIGHT / 2.0, 
-    z: CAMERA_POSITION.z - FOCAL_LENGTH
-};
-
 // misc
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
 //const GLOBAL_LIGHT_DIRECTION: Vec3 = Vec3{ x: 1.0, y: 1.0, z: -1.0 };
-
-
-struct Frame {
-    pub buffer: Vec<Vec<Color>>,
-    units_per_pixel_x: f32,
-    units_per_pixel_y: f32,
-}
-
-impl Frame {
-
-    pub fn new(width: usize, height: usize) -> Self {
-        Frame { 
-            buffer: vec![vec![Color(0.0, 0.0, 0.0); height]; width],
-            units_per_pixel_x: CAMERA_WIDTH / width as f32,
-            units_per_pixel_y: CAMERA_HEIGHT / height as f32
-        }
-    }
-
-    pub fn units_per_pixel_x(&self) -> f32 { self.units_per_pixel_x }
-    pub fn units_per_pixel_y(&self) -> f32 { self.units_per_pixel_y }
-    
-    /**
-     * Find the world position of a pixel in this frame.
-     */
-    pub fn pixel_to_world(&self, pixel: &(usize,usize)) -> Vec3 {
-        Vec3 { 
-            x: CAMERA_TOP_LEFT.x + (0.5 + pixel.0 as f32) * self.units_per_pixel_x(),
-            y: CAMERA_TOP_LEFT.y - (0.5 + pixel.1 as f32) * self.units_per_pixel_y(),
-            z: CAMERA_TOP_LEFT.z
-        }
-    }
-
-    /**
-     * Initialize a ray projecting out from one pixel in this frame 
-     * (incorporating not only origin position, but direction from 
-     * the focal point).
-     */
-    pub fn pixel_to_ray(&self, pixel: &(usize,usize)) -> Ray {
-        let pixel_position = self.pixel_to_world(&pixel);
-        let mut direction = &pixel_position - &CAMERA_POSITION;
-        direction.normalize();
-
-        Ray {
-            //ray_type: RayType::Primary,
-            origin: pixel_position,
-            direction: direction
-        }
-    }
-}
 
 
 fn ray_trace<'a>() -> Frame {
@@ -114,7 +58,7 @@ fn ray_trace<'a>() -> Frame {
     // Create list of objects
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
     
-    // light
+    // lights
     objs.push(Box::new(Sphere {
         position: Vec3 {
             x: (rand::random::<u8>() % 10) as f32 - 5.0,
@@ -125,7 +69,64 @@ fn ray_trace<'a>() -> Frame {
         material: Material {
             texture_albedo: None,
             texture_specular: None,
-            texture_emission: Some(Box::new(TextureSolid::new(Color(1.0, 0.0, 0.0)))),
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 1.0) })),
+        }
+    }));
+    objs.push(Box::new(Sphere {
+        position: Vec3 {
+            x: (rand::random::<u8>() % 10) as f32 - 5.0,
+            y: (rand::random::<u8>() % 10) as f32 - 5.0,
+            z: (rand::random::<u8>() % 10) as f32 - 15.0,
+        },
+        radius: 1.0,
+        material: Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 1.0) })),
+        }
+    }));
+
+    // floor
+    objs.push(Box::new(Plane {
+        position: Vec3 { x: 0.0, y: -5.0, z: 0.0, },
+        normal: Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        material: Material {
+            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_specular: None,
+            texture_emission: None,
+        }
+    }));
+    
+    // left wall
+    objs.push(Box::new(Plane {
+        position: Vec3 { x: -5.0, y: 0.0, z: 0.0, },
+        normal: Vec3 { x: 1.0, y: 0.0, z: 0.0 },
+        material: Material {
+            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_specular: None,
+            texture_emission: None,
+        }
+    }));
+
+    // right wall
+    objs.push(Box::new(Plane {
+        position: Vec3 { x: 5.0, y: 0.0, z: 0.0, },
+        normal: Vec3 { x: -1.0, y: 0.0, z: 0.0 },
+        material: Material {
+            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_specular: None,
+            texture_emission: None,
+        }
+    }));
+
+    // back wall
+    objs.push(Box::new(Plane {
+        position: Vec3 { x: 0.0, y: 0.0, z: -15.0, },
+        normal: Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+        material: Material {
+            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_specular: None,
+            texture_emission: None,
         }
     }));
     
@@ -186,7 +187,6 @@ fn ray_trace<'a>() -> Frame {
                     let mut cells_done = cells_done_mutex_arc_clone.lock().unwrap();
                     **cells_done = (**cells_done) + 1;
 
-                    //println!("{}", **cells_done);
                     print!("\r{}%           ", format!("{:.*}", 2, (**cells_done as f32 / CELLS as f32) * 100.0));
                     std::io::stdout().flush().ok().expect("");
                 });
@@ -218,11 +218,7 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Ob
                 let illumination = cast_ray(&ray, &objs, MAX_DEPTH);
 
                 let mut frame = frame_mutex.lock().unwrap();
-                frame.buffer[x as usize][y as usize] = Color(
-                    illumination.intensity,
-                    illumination.intensity,
-                    illumination.intensity
-                );
+                frame.buffer[x as usize][y as usize] = illumination.color * clamp(illumination.intensity, 0.0, 1.2);
                 std::mem::drop(frame);
             }
         }
@@ -259,22 +255,25 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, depth: u8) -> 
         // if a texture exists, the corresponding illumination will be passed to shade(). Can
         // probably be improved somehow.
         let diffuse_illumination: Option<Illumination> = if obj.get_material().texture_albedo.is_some() {
-            let mut samples = Vec::with_capacity(SAMPLE_COUNT);
+            let mut samples = [Illumination::new();SAMPLE_COUNT];
 
-            while samples.len() < SAMPLE_COUNT {
+            let mut i = 0;
+            while i < SAMPLE_COUNT {
+
                 let ray = Ray {
                     origin: intersection.position,
                     direction: Vec3::from_angles(
                         rng.gen_range(0.0, 1.0) * PI * 2.0, 
-                        rng.gen_range(0.0, 1.0) * PI * 2.0
+                        rng.gen_range(0.0, 1.0) * PI * 2.0,
                     )
                 };
 
                 // HACK: Figure out a way to *generate* rays that are already within our desired area
                 if ray.direction.angle_to(&intersection.normal) < (PI / 2.0) {
+                    samples[i] = cast_ray(&ray, objs, depth - 1);
+                    start("cast ray -> other");
                     
-                    // recurse
-                    samples.push(cast_ray(&ray, objs, depth - 1));
+                    i += 1;
                 }
             }
 
