@@ -271,7 +271,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, depth: u8) -> 
                 // HACK: Figure out a way to *generate* rays that are already within our desired area
                 if ray.direction.angle_to(&intersection.normal) < (PI / 2.0) {
                     samples[i] = cast_ray(&ray, objs, depth - 1);
-                    start("cast ray -> other");
+                    //start("cast ray -> other");
                     
                     i += 1;
                 }
