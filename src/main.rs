@@ -55,7 +55,7 @@ use timing::{start,stop,finish};
 
 
 // fidelity/tuning
-const CELLS: usize = 64; // must be the square of an integer
+const CELLS: usize = 128; // must be the square of an integer
 
 // misc
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
@@ -82,13 +82,13 @@ fn ray_trace<'a>() -> Frame {
     let mut cells_done = 0;
 
     // Create thread wrappers
-    let objs_arc: Arc<&Vec<Box<dyn Object + Sync + Send>>> = Arc::new(&objs);
     let frame_mutex_arc: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut frame));
+    let objs_arc: Arc<&Vec<Box<dyn Object + Sync + Send>>> = Arc::new(&objs);
     let cells_done_mutex_arc = Arc::new(Mutex::new(&mut cells_done));
 
     // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
 
-    start("raytrace");
+    //start("raytrace");
 
     crossbeam::scope(move |scope| {
         let row_column_count = (CELLS as f32).sqrt().round() as usize;
@@ -246,7 +246,7 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Ob
             let illumination = cast_ray(&ray, &objs, &mut rng, MAX_DEPTH);
 
             let mut frame = frame_mutex.lock().unwrap();
-            frame.buffer[x as usize][y as usize] = illumination.color * clamp(illumination.intensity, 0.0, 1.2);
+            frame.set(x as usize, y as usize, illumination.color * clamp(illumination.intensity, 0.0, 1.2));
             std::mem::drop(frame);
         }
     }
@@ -256,13 +256,13 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Ob
  * Cast a single ray, from a pixel or from a bounce
  */
 fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut ThreadRng, depth: u8) -> Illumination {
-    start("cast ray");
+    //start("cast ray");
     if depth <= 0 { return BACKGROUND_ILLUMINATION; }
 
     let mut nearest_intersection: Option<Intersection> = None;
     let mut nearest_object_index: Option<usize> = None;
 
-    start("cast ray -> find nearest");
+    //start("cast ray -> find nearest");
 
     // Find nearest object intersection
     for index in 0..objs.len() {
@@ -276,9 +276,9 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
             _ => ()
         }
     }
-    stop("cast ray -> find nearest");
+    //stop("cast ray -> find nearest");
 
-    start("cast ray -> other");
+    //start("cast ray -> other");
 
     // Compute total illumination at this intersection
     let nearest_illumination: Illumination = nearest_object_index
@@ -286,18 +286,18 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
             let nearest_object = &objs[object_index];
             let intersection = nearest_intersection.unwrap(); // if we have nearest_object_index, we have nearest_intersection
 
-            find_memoized_illumination(object_index, &intersection.position)
-                .unwrap_or({
+            //find_memoized_illumination(object_index, &intersection.position)
+                //.unwrap_or({
 
                     // HACK: This is a weird relationship between Material and cast_ray; assumption is made that 
                     // if a texture exists, the corresponding illumination will be passed to shade(). Can
                     // probably be improved somehow.
-                    let diffuse_illumination: Option<Illumination> = if nearest_object.get_material().texture_albedo.is_some() {
+                    let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
 
                         let mut i = 0;
                         while i < SAMPLE_COUNT {
-                            start("cast ray -> other -> rand gen");
+                            //start("cast ray -> other -> rand gen");
                             
                             let ray = Ray {
                                 origin: intersection.position,
@@ -306,14 +306,14 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                                     rng.gen_range(0.0, PI * 2.0),
                                 )
                             };
-                            stop("cast ray -> other -> rand gen");
+                            //stop("cast ray -> other -> rand gen");
 
                             // HACK: Figure out a way to *generate* rays that are already within our desired area
                             if valid_diffuse_sample(&intersection, &ray) {
                                 // recurse
-                                stop("cast ray -> other");
+                                //stop("cast ray -> other");
                                 samples[i] = cast_ray(&ray, objs, rng, depth - 1);
-                                start("cast ray -> other");
+                                //start("cast ray -> other");
 
                                 i += 1;
                             }
@@ -321,17 +321,15 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
 
                         let illumination = integrate(&samples);
 
-                        Some(illumination)
-                    } else {
-                        None
-                    };
+                        illumination
+                    });
 
-                    let specular_illumination: Option<Illumination> = None;/*if nearest_object.get_material().texture_specular.is_some() {
+                    let specular_illumination: Option<Illumination> = None;/*nearest_object.get_material().texture_albedo.as_ref().map(|_| {
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
 
                         let mut i = 0;
                         while i < SAMPLE_COUNT {
-                            start("cast ray -> other -> rand gen");
+                            //start("cast ray -> other -> rand gen");
                             
                             let ray = Ray {
                                 origin: intersection.position,
@@ -340,14 +338,14 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                                     rng.gen_range(0.0, PI * 2.0),
                                 )
                             };
-                            stop("cast ray -> other -> rand gen");
+                            //stop("cast ray -> other -> rand gen");
 
                             // HACK: Figure out a way to *generate* rays that are already within our desired area
                             if valid_specular_sample(&intersection, &ray) {
                                 // recurse
-                                stop("cast ray -> other");
+                                //stop("cast ray -> other");
                                 samples[i] = cast_ray(&ray, objs, rng, depth - 1);
-                                start("cast ray -> other");
+                                //start("cast ray -> other");
 
                                 i += 1;
                             }
@@ -355,10 +353,8 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
 
                         let illumination = integrate(&samples);
 
-                        Some(illumination)
-                    } else {
-                        None
-                    };*/
+                        illumination
+                    });*/
 
                     let uv = nearest_object.texture_coordinate(&intersection.position);
 
@@ -371,15 +367,15 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                         &specular_illumination
                     );
 
-                    memoize_illumination(object_index, pos, illumination.clone());
+                    //memoize_illumination(object_index, pos, illumination.clone());
 
                     illumination
-                })
+                //})
         })
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
-    stop("cast ray -> other");
-    stop("cast ray");
+    //stop("cast ray -> other");
+    //stop("cast ray");
     return nearest_illumination;
 }
 
@@ -404,7 +400,7 @@ fn write_image(ray_frame: &Frame) {
 
     for x in 0..RESOLUTION {
         for y in 0..RESOLUTION {
-            let color = ray_frame.buffer[x][y];
+            let color = ray_frame.get(x, y);
             image.get_pixel_mut(x as u32, y as u32).data = color.to_u8();
         }
     }

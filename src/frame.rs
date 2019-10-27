@@ -2,6 +2,7 @@
 use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
+use crate::fidelity_consts::RESOLUTION;
 
 const CAMERA_WIDTH: f32 = 2.0;
 const CAMERA_HEIGHT: f32 = 2.0;
@@ -14,7 +15,7 @@ const CAMERA_TOP_LEFT: Vec3 = Vec3 {
 };
 
 pub struct Frame {
-    pub buffer: Vec<Vec<Color>>,
+    buffer: Box<[Color]>,
     units_per_pixel_x: f32,
     units_per_pixel_y: f32,
 }
@@ -23,10 +24,22 @@ impl Frame {
 
     pub fn new(width: usize, height: usize) -> Self {
         Frame { 
-            buffer: vec![vec![Color(0.0, 0.0, 0.0); height]; width],
+            buffer: vec![Color(0.0,0.0,0.0); RESOLUTION * RESOLUTION].into_boxed_slice(),
             units_per_pixel_x: CAMERA_WIDTH / width as f32,
             units_per_pixel_y: CAMERA_HEIGHT / height as f32
         }
+    }
+
+    pub fn set(&mut self, x: usize, y: usize, color: Color) {
+        self.buffer[Frame::index(x,y)] = color;
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> Color {
+        self.buffer[Frame::index(x,y)]
+    }
+
+    fn index(x: usize, y: usize) -> usize {
+        x % RESOLUTION + y * RESOLUTION
     }
 
     /**
