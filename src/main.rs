@@ -15,6 +15,7 @@ extern crate lazy_static;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::io::Write;
+use std::time::{Duration,Instant};
 
 mod color;
 mod fidelity_consts;
@@ -70,6 +71,8 @@ fn main() {
 fn ray_trace<'a>() -> Frame {
     
     println!("Tracing scene...");
+
+    let start_time = Instant::now();
     
     // Create list of objects
     let objs = construct_scene();
@@ -128,6 +131,7 @@ fn ray_trace<'a>() -> Frame {
 
     print_memoization();
 
+    println!("Total time: {}s", Instant::now().duration_since(start_time).as_millis() as f32 / 1000.0);
     println!("done");
 
     return frame;
