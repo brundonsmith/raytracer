@@ -8,13 +8,24 @@ use crate::intersection::Intersection;
 use crate::material::Material;
 
 pub struct Sphere {
-    pub position: Vec3,
-    pub radius: f32,
-    pub material: Material,
+    position: Vec3,
+    radius: f32,
+    material: Material,
+    radius_squared: f32,
 }
 
 impl Sphere {
 
+    pub fn new(position: Vec3, radius: f32, material: Material) -> Self {
+        Self {
+            position,
+            radius,
+            material,
+            radius_squared: radius * radius,
+        }
+    }
+
+    /*
     pub fn surface_point(&self, latitude: f32, longitude: f32) -> Vec3 {
         let lat_cos = latitude.cos();
         let lon_sin = longitude.sin();
@@ -26,10 +37,7 @@ impl Sphere {
             z: lat_sin * lon_sin
         } * self.radius)
     }
-
-    pub fn radius_squared(&self) -> f32 {
-        self.radius * self.radius
-    }
+    */
 }
 
 impl Object for Sphere {
@@ -40,7 +48,7 @@ impl Object for Sphere {
         let l: Vec3 = &ray.origin - &self.position;
         let a: f32 = &ray.direction * &ray.direction;
         let b: f32 = 2.0 * (&ray.direction * &l);
-        let c: f32 = &l * &l - self.radius_squared();
+        let c: f32 = &l * &l - self.radius_squared;
 
         return match solve_quadratic(a, b, c) {
             Some((mut t0, mut t1)) => {
@@ -58,7 +66,6 @@ impl Object for Sphere {
                 }
 
                 let distance = t0;
-
                 let position = &ray.origin + &(&ray.direction * distance);
                 let normal = (&position - &self.position).normalized();
                 let direction = ray.direction;

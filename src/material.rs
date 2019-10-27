@@ -3,6 +3,7 @@ use crate::color::Color;
 use crate::illumination::Illumination;
 use crate::texture::Texture;
 use crate::intersection::Intersection;
+use crate::timing::{start,stop};
 
 const ERROR_COLOR: Color = Color(1.0, 0.0, 1.0);
 
@@ -22,7 +23,7 @@ impl Material {
         }
     }
 
-    pub fn shade(&self, intersection: Intersection, uv: (f32,f32), diffuse_illumination: Option<Illumination>, specular_illumination: Option<Illumination>) -> Illumination {
+    pub fn shade(&self, intersection: &Intersection, uv: (f32,f32), diffuse_illumination: &Option<Illumination>, specular_illumination: &Option<Illumination>) -> Illumination {
         let mut illumination = Illumination::new();
 
         // TODO: Blend channels together instead of having them clobber each other
@@ -50,7 +51,7 @@ impl Material {
             },
             _ => ()
         };
-
+        
         return illumination;
     }
 }

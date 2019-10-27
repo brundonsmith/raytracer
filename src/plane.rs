@@ -5,12 +5,20 @@ use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
 
-use crate::timing::{start,stop};
-
 pub struct Plane {
     pub position: Vec3,
     pub normal: Vec3,
     pub material: Material,
+}
+
+impl Plane {
+    pub fn new(position: Vec3, normal: Vec3, material: Material) -> Self {
+        Self {
+            position,
+            normal,
+            material,
+        }
+    }
 }
 
 impl Object for Plane {
