@@ -49,7 +49,7 @@ impl Vec3 {
     }
 
     pub fn angle(&self, other: &Vec3) -> f32 {
-        (self * other) / (self.len() * other.len())
+        ((self * other) / (self.len() * other.len())).acos()
     }
 }
 
