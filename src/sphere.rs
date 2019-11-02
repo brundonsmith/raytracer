@@ -69,7 +69,7 @@ impl Object for Sphere {
 
                 return Some(Intersection::new(
                     distance,
-                    position,
+                    &position + &(&normal * 0.01), // offset to avoid floating-point error
                     normal,
                     direction,
                 ));

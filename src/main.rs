@@ -371,7 +371,7 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray) -> bool>(intersection: &mut In
     while i < SAMPLE_COUNT {
         //start("cast ray -> other -> rand gen");
         
-        let ray = Ray::random_direction(&intersection.position + &(&intersection.normal * 0.01), rng);
+        let ray = Ray::random_direction(intersection.position, rng);
         //stop("cast ray -> other -> rand gen");
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area

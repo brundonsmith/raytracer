@@ -29,11 +29,11 @@ impl Object for Plane {
         let distance = numerator / denominator;
 
         if distance > 0.0 {
-            //println!("Intersected plane at {:?}", &(&ray.origin + &ray.direction) * distance);
+            let point = &ray.origin + &(&ray.direction * distance);
 
             return Some(Intersection::new(
                 distance,
-                &ray.origin + &(&ray.direction * distance),
+                &point + &(&self.normal * 0.01), // offset to avoid floating-point error
                 self.normal,
                 ray.direction,
             ));
