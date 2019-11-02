@@ -32,6 +32,7 @@ mod scenes;
 mod sphere;
 mod texture_checkered;
 mod texture_solid;
+mod texture_image;
 mod texture;
 mod utils;
 mod vec3;
@@ -45,7 +46,7 @@ use illumination::{Illumination,integrate};
 use intersection::Intersection;
 use utils::clamp;
 use ray::Ray;
-use scenes::{construct_reflect_scene,construct_room_scene};
+use scenes::{construct_reflect_scene,construct_room_scene,construct_image_texture_test};
 use object::Object;
 use timing::{start,stop,finish};
 
@@ -285,7 +286,7 @@ fn write_image(ray_frame: &Frame) {
     for x in 0..RESOLUTION {
         for y in 0..RESOLUTION {
             let color = ray_frame.get(x, y);
-            image.get_pixel_mut(x as u32, y as u32).data = color.to_u8();
+            image.get_pixel_mut(x as u32, y as u32).0 = color.to_u8();
         }
     }
 

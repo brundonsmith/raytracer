@@ -5,7 +5,7 @@ authors = ["Brandon Smith <mail@brandonsmith.ninja>"]
 edition = "2018"
 
 [dependencies]
-image = "0.21.2"
+image = "0.22.3"
 crossbeam = "0.7.2"
 lazy_static = "1.4.0"
 

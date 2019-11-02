@@ -88,9 +88,13 @@ impl Object for Sphere {
 
         let latitude = (relative_point.y / self.radius).acos();
 
+        let u = continuous_longitude / (2.0 * PI);
+        let v = 1.0 - latitude / PI;
+
+        // Some extra tiling (4x4)
         return (
-            continuous_longitude / (2.0 * PI), 
-            1.0 - latitude / PI
+            (u * 4.0) - (u * 4.0).floor(), 
+            (v * 4.0) - (v * 4.0).floor()
         );
     }
 
