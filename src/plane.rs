@@ -34,6 +34,8 @@ impl Object for Plane {
                 position: &ray.origin + &(&ray.direction * distance),
                 normal: self.normal,
                 direction: ray.direction,
+                //R=2(N⋅L)N−L
+                reflected_direction: &(&self.normal * (2.0 * &(&self.normal * &ray.direction))) - &ray.direction
             })
         } else {
             None

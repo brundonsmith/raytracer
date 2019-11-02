@@ -7,7 +7,7 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use rand::RngCore;
 extern crate image;
-use image::{ImageBuffer, Rgba};
+use image::{ImageBuffer, Rgb};
 extern crate crossbeam;
 #[macro_use]
 extern crate lazy_static;
@@ -37,7 +37,7 @@ mod vec3;
 mod timing;
 
 use color::Color;
-use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH};
+use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH,CELLS};
 use frame::Frame;
 use illumination_memoization::{find_memoized_illumination,memoize_illumination,print_memoization};
 use illumination::{Illumination,integrate};
@@ -52,10 +52,6 @@ use plane::Plane;
 use texture_checkered::TextureCheckered;
 use texture_solid::TextureSolid;
 use timing::{start,stop,finish};
-
-
-// fidelity/tuning
-const CELLS: usize = 128; // must be the square of an integer
 
 // misc
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
@@ -156,12 +152,21 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         }
     )));*/
     objs.push(Box::new(Sphere::new(
-        Vec3 { x: -3.0, y: -3.0, z: -12.0 },
+        Vec3 { x: -3.0, y: -1.0, z: -10.0 },
+        1.0,
+        Material {
+            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
+            texture_specular: None,
+            texture_emission: None,
+        }
+    )));
+    objs.push(Box::new(Sphere::new(
+        Vec3 { x: 3.0, y: -3.0, z: -12.0 },
         1.0,
         Material {
             texture_albedo: None,
-            texture_specular: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 1.0) })),
+            texture_specular: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
+            texture_emission: None,
         }
     )));
 
@@ -176,12 +181,23 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         }
     )));
 
+    // ceiling
+    objs.push(Box::new(Plane::new(
+        Vec3 { x: 0.0, y: 5.0, z: 0.0, },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.98, 0.9) })),
+        }
+    )));
+
     // left wall
     objs.push(Box::new(Plane::new(
         Vec3 { x: -5.0, y: 0.0, z: 0.0, },
         Vec3 { x: 1.0, y: 0.0, z: 0.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
             texture_specular: None,
             texture_emission: None,
         }
@@ -192,7 +208,7 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 5.0, y: 0.0, z: 0.0, },
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
             texture_specular: None,
             texture_emission: None,
         }
@@ -246,7 +262,7 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Ob
             let illumination = cast_ray(&ray, &objs, &mut rng, MAX_DEPTH);
 
             let mut frame = frame_mutex.lock().unwrap();
-            frame.set(x as usize, y as usize, illumination.color * clamp(illumination.intensity, 0.0, 1.2));
+            frame.set(x as usize, y as usize, illumination.color * clamp(illumination.intensity, 0.0, 1.0));
             std::mem::drop(frame);
         }
     }
@@ -293,30 +309,11 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                     // if a texture exists, the corresponding illumination will be passed to shade(). Can
                     // probably be improved somehow.
                     let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
+                        let sample_rays = get_sample_rays(&intersection, valid_diffuse_sample, rng);
+
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
-
-                        let mut i = 0;
-                        while i < SAMPLE_COUNT {
-                            //start("cast ray -> other -> rand gen");
-                            
-                            let ray = Ray {
-                                origin: intersection.position,
-                                direction: Vec3::from_angles(
-                                    rng.gen_range(0.0, PI * 2.0),
-                                    rng.gen_range(0.0, PI * 2.0),
-                                )
-                            };
-                            //stop("cast ray -> other -> rand gen");
-
-                            // HACK: Figure out a way to *generate* rays that are already within our desired area
-                            if valid_diffuse_sample(&intersection, &ray) {
-                                // recurse
-                                //stop("cast ray -> other");
-                                samples[i] = cast_ray(&ray, objs, rng, depth - 1);
-                                //start("cast ray -> other");
-
-                                i += 1;
-                            }
+                        for i in 0..SAMPLE_COUNT {
+                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
                         }
 
                         let illumination = integrate(&samples);
@@ -324,37 +321,18 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                         illumination
                     });
 
-                    let specular_illumination: Option<Illumination> = None;/*nearest_object.get_material().texture_albedo.as_ref().map(|_| {
+                    let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|_| {
+                        let sample_rays = get_sample_rays(&intersection, valid_specular_sample, rng);
+
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
-
-                        let mut i = 0;
-                        while i < SAMPLE_COUNT {
-                            //start("cast ray -> other -> rand gen");
-                            
-                            let ray = Ray {
-                                origin: intersection.position,
-                                direction: Vec3::from_angles(
-                                    rng.gen_range(0.0, PI * 2.0),
-                                    rng.gen_range(0.0, PI * 2.0),
-                                )
-                            };
-                            //stop("cast ray -> other -> rand gen");
-
-                            // HACK: Figure out a way to *generate* rays that are already within our desired area
-                            if valid_specular_sample(&intersection, &ray) {
-                                // recurse
-                                //stop("cast ray -> other");
-                                samples[i] = cast_ray(&ray, objs, rng, depth - 1);
-                                //start("cast ray -> other");
-
-                                i += 1;
-                            }
+                        for i in 0..SAMPLE_COUNT {
+                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
                         }
 
                         let illumination = integrate(&samples);
 
                         illumination
-                    });*/
+                    });
 
                     let uv = nearest_object.texture_coordinate(&intersection.position);
 
@@ -379,16 +357,40 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
     return nearest_illumination;
 }
 
+
+fn get_sample_rays<F: Fn(&Intersection, &Ray) -> bool>(intersection: &Intersection, predicate: F, rng: &mut ThreadRng) -> [Ray;SAMPLE_COUNT] {
+    let mut rays = [Ray::new();SAMPLE_COUNT];
+
+    let mut i = 0;
+    while i < SAMPLE_COUNT {
+        //start("cast ray -> other -> rand gen");
+        
+        let ray = Ray::random_direction(intersection.position, rng);
+        //stop("cast ray -> other -> rand gen");
+
+        // HACK: Figure out a way to *generate* rays that are already within our desired area
+        if predicate(&intersection, &ray) {
+            //stop("cast ray -> other");
+            rays[i] = ray;
+            //start("cast ray -> other");
+
+            i += 1;
+        }
+    }
+
+    return rays;
+}
+
+
 fn valid_diffuse_sample(intersection: &Intersection, sample_ray: &Ray) -> bool {
     //                                            angle < PI / 2.0
     sample_ray.direction.angle_to(&intersection.normal) * 2.0 < PI
 }
 
-/*
 fn valid_specular_sample(intersection: &Intersection, sample_ray: &Ray) -> bool {
     // HACK: Factor in an actual "smoothness" value instead of PI / 4.0
-    sample_ray.direction.angle_to(&intersection.normal) * 4.0 < PI
-}*/
+    sample_ray.direction.angle_to(&intersection.reflected_direction) * 16.0 < PI
+}
 
 /**
  * Write a frame to a PNG file
@@ -396,7 +398,7 @@ fn valid_specular_sample(intersection: &Intersection, sample_ray: &Ray) -> bool 
 fn write_image(ray_frame: &Frame) {
     println!("Writing to png...");
 
-    let mut image: ImageBuffer::<Rgba<u8>,Vec<u8>> = ImageBuffer::new(RESOLUTION as u32, RESOLUTION as u32);
+    let mut image: ImageBuffer::<Rgb<u8>,Vec<u8>> = ImageBuffer::new(RESOLUTION as u32, RESOLUTION as u32);
 
     for x in 0..RESOLUTION {
         for y in 0..RESOLUTION {

@@ -74,7 +74,9 @@ impl Object for Sphere {
                     distance,
                     position,
                     normal,
-                    direction
+                    direction,
+                    //R=2(N⋅L)N−L
+                    reflected_direction: &(&normal * (2.0 * &(&normal * &ray.direction))) - &ray.direction
                 });
             },
             None => None

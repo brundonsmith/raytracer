@@ -6,12 +6,11 @@ pub struct Color(pub f32, pub f32, pub f32);
 
 impl Color {
 
-    pub fn to_u8(&self) -> [u8;4] {
+    pub fn to_u8(&self) -> [u8;3] {
         [ 
             clamp(self.0 * 255.0, 0.0, 255.0) as u8, 
             clamp(self.1 * 255.0, 0.0, 255.0) as u8, 
-            clamp(self.2 * 255.0, 0.0, 255.0) as u8,
-            254, // slight transparency to prevent Twitter compression
+            clamp(self.2 * 255.0, 0.0, 255.0) as u8
         ]
     }
 }

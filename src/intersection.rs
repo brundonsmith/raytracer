@@ -8,6 +8,7 @@ pub struct Intersection {
     pub position: Vec3,
     pub normal: Vec3,
     pub direction: Vec3,
+    pub reflected_direction: Vec3,
 }
 
 impl Intersection {
