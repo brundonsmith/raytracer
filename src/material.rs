@@ -1,9 +1,7 @@
 
-use crate::color::Color;
 use crate::illumination::Illumination;
 use crate::texture::Texture;
 use crate::intersection::Intersection;
-use crate::timing::{start,stop};
 
 pub struct Material {
     pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
@@ -38,7 +36,7 @@ impl Material {
         match &self.texture_emission {
             Some(texture) => {
                 illumination.color = illumination.color + texture.color_at(uv);
-                illumination.intensity += 5.0; // TODO: Express brightness in data
+                illumination.intensity += 3.0; // TODO: Express brightness in data
                 channels += 1.0;
             },
             _ => ()
