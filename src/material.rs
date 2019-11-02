@@ -5,8 +5,6 @@ use crate::texture::Texture;
 use crate::intersection::Intersection;
 use crate::timing::{start,stop};
 
-const ERROR_COLOR: Color = Color(1.0, 0.0, 1.0);
-
 pub struct Material {
     pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
     pub texture_specular: Option<Box<dyn Texture + Sync + Send>>,
@@ -14,14 +12,6 @@ pub struct Material {
 }
 
 impl Material {
-
-    pub fn new() -> Self {
-        Material {
-            texture_albedo: None,
-            texture_specular: None,
-            texture_emission: None,
-        }
-    }
 
     pub fn shade(&self, intersection: &Intersection, uv: (f32,f32), diffuse_illumination: &Option<Illumination>, specular_illumination: &Option<Illumination>) -> Illumination {
         let mut illumination = Illumination::new();
@@ -47,7 +37,7 @@ impl Material {
         match &self.texture_emission {
             Some(texture) => {
                 illumination.color = texture.color_at(uv);
-                illumination.intensity = 2.0; // TODO: Express brightness in data
+                illumination.intensity = 5.0; // TODO: Express brightness in data
             },
             _ => ()
         };
