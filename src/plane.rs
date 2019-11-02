@@ -24,21 +24,21 @@ impl Plane {
 impl Object for Plane {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
-        let distance = (&(&self.position - &ray.origin) * &self.normal) / (&ray.direction * &self.normal);
+        let numerator = (&self.position - &ray.origin).dot(&self.normal);
+        let denominator = ray.direction.dot(&self.normal);
+        let distance = numerator / denominator;
 
-        return if distance > 0.0 {
+        if distance > 0.0 {
             //println!("Intersected plane at {:?}", &(&ray.origin + &ray.direction) * distance);
 
-            Some(Intersection {
+            return Some(Intersection::new(
                 distance,
-                position: &ray.origin + &(&ray.direction * distance),
-                normal: self.normal,
-                direction: ray.direction,
-                //R=2(N⋅L)N−L
-                reflected_direction: &(&self.normal * (2.0 * &(&self.normal * &ray.direction))) - &ray.direction
-            })
+                &ray.origin + &(&ray.direction * distance),
+                self.normal,
+                ray.direction,
+            ));
         } else {
-            None
+            return None;
         };
     }
 

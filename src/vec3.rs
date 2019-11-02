@@ -1,6 +1,5 @@
 
 
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 { 
     pub x: f32, 
@@ -43,7 +42,13 @@ impl Vec3 {
         self.z *= scale;
     } 
 
-    pub fn angle_to(&self, other: &Vec3) -> f32 {
+    pub fn dot(self, other: &Self) -> f32 {
+        self.x * other.x +
+        self.y * other.y + 
+        self.z * other.z
+    }
+
+    pub fn angle(&self, other: &Vec3) -> f32 {
         (self * other) / (self.len() * other.len())
     }
 }
@@ -100,9 +105,7 @@ impl std::ops::Mul for &Vec3 {
 
     // (dot-product)
     fn mul(self, other: Self) -> Self::Output {
-        self.x * other.x +
-        self.y * other.y + 
-        self.z * other.z
+        self.dot(other)
     }
 }
 impl std::ops::Mul<f32> for &Vec3 {

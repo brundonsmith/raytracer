@@ -46,16 +46,12 @@ impl Object for Sphere {
         
         // analytic solution
         let l: Vec3 = &ray.origin - &self.position;
-        let a: f32 = &ray.direction * &ray.direction;
-        let b: f32 = 2.0 * (&ray.direction * &l);
-        let c: f32 = &l * &l - self.radius_squared;
+        let a: f32 = ray.direction.dot(&ray.direction);
+        let b: f32 = 2.0 * ray.direction.dot(&l);
+        let c: f32 = l.dot(&l) - self.radius_squared;
 
         return match solve_quadratic(a, b, c) {
-            Some((mut t0, mut t1)) => {
-
-                if t0 > t1 {
-                    std::mem::swap(&mut t0, &mut t1);
-                }
+            Some((mut t0, t1)) => {
 
                 if t0 < 0.0 {
                     t0 = t1; // if t0 is negative, let's use t1 instead
@@ -67,17 +63,16 @@ impl Object for Sphere {
 
                 let distance = t0;
                 let position = &ray.origin + &(&ray.direction * distance);
-                let normal = (&position - &self.position).normalized();
+                let mut normal = &position - &self.position;
+                normal.normalize();
                 let direction = ray.direction;
 
-                return Some(Intersection {
+                return Some(Intersection::new(
                     distance,
                     position,
                     normal,
                     direction,
-                    //R=2(N⋅L)N−L
-                    reflected_direction: &(&normal * (2.0 * &(&normal * &ray.direction))) - &ray.direction
-                });
+                ));
             },
             None => None
         };
