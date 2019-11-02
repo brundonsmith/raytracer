@@ -40,7 +40,7 @@ impl Intersection {
     pub fn reflected_direction(&mut self) -> &Vec3 {
         if self.reflected_direction.is_none() {
             //R=2(N⋅L)N−L
-            self.reflected_direction = Some(&(&self.normal * (2.0 * &(&self.normal * &self.direction))) - &self.direction);
+            self.reflected_direction = Some(&self.direction - &(&self.normal * (2.0 * &(&self.normal * &self.direction))));
         }
 
         return self.reflected_direction.as_ref().unwrap();

@@ -19,8 +19,6 @@ impl Illumination {
 
 //pub fn integrate<'a,I: Iterator<Item = &'a Illumination>>(samples: I) -> Illumination {
 pub fn integrate(samples: &[Illumination;SAMPLE_COUNT]) -> Illumination {
-
-    let mut count = 0;
     let mut lum = Illumination::new();
 
     // HACK: Do a true weighted-average on colors eventually (scale by brightness)
@@ -29,27 +27,22 @@ pub fn integrate(samples: &[Illumination;SAMPLE_COUNT]) -> Illumination {
     for index in 0..SAMPLE_COUNT {
         let sample = samples[index];
 
-        if sample.intensity > 0.001 {
-            samples_with_illum += 1.0;
-
+        //if sample.intensity > 0.001 {
             lum.color.0 += sample.color.0;
             lum.color.1 += sample.color.1;
             lum.color.2 += sample.color.2;
-        }
+
+            samples_with_illum += 1.0;
+        //}
 
         lum.intensity += sample.intensity;
-
-        count += 1;
     }
-
-
-    let float_count = count as f32;
 
     lum.color.0 /= samples_with_illum;
     lum.color.1 /= samples_with_illum;
     lum.color.2 /= samples_with_illum;
 
-    lum.intensity /= float_count;
+    lum.intensity /= SAMPLE_COUNT as f32;
 
     return lum;
 }

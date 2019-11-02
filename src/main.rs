@@ -136,51 +136,56 @@ fn ray_trace<'a>() -> Frame {
 fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
 
-    // lights
-    /*
+    // spheres
     objs.push(Box::new(Sphere::new(
-        Vec3 {
-            x: (rand::random::<u8>() % 10) as f32 - 5.0,
-            y: (rand::random::<u8>() % 10) as f32 - 5.0,
-            z: (rand::random::<u8>() % 10) as f32 - 15.0,
-        },
+        Vec3 { x: -1.5, y: 0.0, z: -9.0 },
         1.0,
         Material {
-            texture_albedo: None,
-            texture_specular: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 1.0) })),
-        }
-    )));*/
-    /*
-    objs.push(Box::new(Sphere::new(
-        Vec3 { x: -3.0, y: -1.0, z: -10.0 },
-        1.0,
-        Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
-            texture_specular: None,
+            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_specular: None,//Some(Box::new(TextureSolid::new())),
             texture_emission: None,
         }
-    )));*/
+    )));
+    
     objs.push(Box::new(Sphere::new(
-        Vec3 { x: 0.0, y: 0.0, z: -12.0 },
+        Vec3 { x: 2.0, y: -3.0, z: -12.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
-            texture_specular: None,//Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
-            texture_emission: None,
+            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 1.0) })),
+            texture_specular: Some(Box::new(TextureSolid::new())),
+            texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
     )));
 
+    /*
+    for _ in 0..10 {
+        objs.push(Box::new(Sphere::new(
+            Vec3 {
+                x: (rand::random::<u8>() % 10) as f32 - 5.0,
+                y: (rand::random::<u8>() % 10) as f32 - 5.0,
+                z: (rand::random::<u8>() % 10) as f32 - 15.0,
+            },
+            1.0,
+            Material {
+                texture_albedo: Some(Box::new(TextureCheckered::new())),
+                texture_specular: None,
+                texture_emission: None,
+            }
+        )))
+    }*/
+
+    
     // ceiling
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 5.0, z: 0.0, },
-        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: -1.0, z: 0.0 },
         Material {
-            texture_albedo: None,
+            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
             texture_specular: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.98, 0.9) })),
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
         }
     )));
+    
 
     // floor
     objs.push(Box::new(Plane::new(
@@ -188,11 +193,12 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid::new())),
-            texture_specular: None,
+            texture_specular: None,//Some(Box::new(TextureSolid::new())),
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
     )));
 
+    
     // left wall
     objs.push(Box::new(Plane::new(
         Vec3 { x: -5.0, y: 0.0, z: 0.0, },
@@ -210,7 +216,7 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
-            texture_specular: None,
+            texture_specular: None,//Some(Box::new(TextureSolid::new())),
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
         }
     )));
@@ -236,25 +242,7 @@ fn construct_scene() -> Vec<Box<dyn Object + Sync + Send>> {
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
         }
     )));
-
-    // spheres
-    /*
-    for _ in 0..10 {
-        objs.push(Box::new(Sphere::new(
-            Vec3 {
-                x: (rand::random::<u8>() % 10) as f32 - 5.0,
-                y: (rand::random::<u8>() % 10) as f32 - 5.0,
-                z: (rand::random::<u8>() % 10) as f32 - 15.0,
-            },
-            1.0,
-            Material {
-                texture_albedo: Some(Box::new(TextureCheckered::new())),
-                texture_specular: None,
-                texture_emission: None,
-            }
-        )))
-    }*/
-
+    
     return objs;
 }
 
@@ -321,7 +309,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                     // if a texture exists, the corresponding illumination will be passed to shade(). Can
                     // probably be improved somehow.
                     let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
-                        let sample_rays = get_sample_rays(&intersection, valid_diffuse_sample, rng);
+                        let sample_rays = get_sample_rays(&mut intersection, valid_diffuse_sample, rng);
 
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
@@ -334,21 +322,21 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                     });
 
                     let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|_| {
-                        
-                        
-                        //let sample_rays = get_sample_rays(&intersection, valid_specular_sample, rng);
+                        /*
+                        let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng);
+
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
-                            //samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                            samples[i] = cast_ray(&Ray {
-                                origin: &intersection.position + &(&intersection.normal * 0.01),
-                                direction: intersection.reflected_direction().clone()
-                            }, objs, rng, depth - 1);
+                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
                         }
                         
                         let illumination = integrate(&samples);
 
                         illumination
+                        */
+                        cast_ray(&Ray { 
+                            origin: &intersection.position + &(&intersection.normal * 0.01), 
+                            direction: intersection.reflected_direction().clone() }, objs, rng, depth - 1)
                         
                     });
 
@@ -376,7 +364,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
 }
 
 
-fn get_sample_rays<F: Fn(&Intersection, &Ray) -> bool>(intersection: &Intersection, predicate: F, rng: &mut ThreadRng) -> [Ray;SAMPLE_COUNT] {
+fn get_sample_rays<F: Fn(&mut Intersection, &Ray) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
 
     let mut i = 0;
@@ -387,7 +375,7 @@ fn get_sample_rays<F: Fn(&Intersection, &Ray) -> bool>(intersection: &Intersecti
         //stop("cast ray -> other -> rand gen");
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area
-        if predicate(&intersection, &ray) {
+        if predicate(intersection, &ray) {
             //stop("cast ray -> other");
             rays[i] = ray;
             //start("cast ray -> other");
@@ -400,14 +388,14 @@ fn get_sample_rays<F: Fn(&Intersection, &Ray) -> bool>(intersection: &Intersecti
 }
 
 
-fn valid_diffuse_sample(intersection: &Intersection, sample_ray: &Ray) -> bool {
+fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray) -> bool {
     //                                            angle < PI / 2.0
     sample_ray.direction.angle(&intersection.normal) * 2.0 < PI
 }
 
 fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray) -> bool {
-    // HACK: Factor in an actual "smoothness" value instead of PI / 4.0
-    sample_ray.direction.angle(&intersection.reflected_direction()) * 16.0 < PI
+    // HACK: Factor in an actual "smoothness" value instead of PI / 64.0
+    sample_ray.direction.angle(&intersection.reflected_direction()) * 64.0 < PI
 }
 
 /**

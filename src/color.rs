@@ -15,6 +15,18 @@ impl Color {
     }
 }
 
+impl std::ops::Add<Color> for Color {
+    type Output = Color;
+    
+    fn add(self, other: Color) -> Self::Output {
+        Color (
+            self.0 + other.0,
+            self.1 + other.1,
+            self.2 + other.2,
+        )
+    }
+}
+
 impl std::ops::Mul<Color> for Color {
     type Output = Color;
     
