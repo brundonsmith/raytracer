@@ -9,6 +9,8 @@ use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
 use crate::texture_image::TextureImage;
 
+const TEXTURE_PATH: &str = "/Users/brundolf/git/raytracer/texture.jpg";
+
 pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
 
@@ -25,6 +27,7 @@ pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: -1.5, z: 0.0, },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid::new())),
             texture_specular: Some(Box::new(TextureSolid::new())),
@@ -42,7 +45,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 0.0, z: -5.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
+            texture_albedo: Some(Box::new(TextureImage::new(TEXTURE_PATH))),
             texture_specular: None,//Some(Box::new(TextureSolid::new())),
             texture_emission: None,
         }
@@ -53,6 +56,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 5.0, z: 0.0, },
         Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -65,6 +69,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: -5.0, z: 0.0, },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -77,6 +82,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: -5.0, y: 0.0, z: 0.0, },
         Vec3 { x: 1.0, y: 0.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -88,6 +94,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 5.0, y: 0.0, z: 0.0, },
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -99,6 +106,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: -15.0, },
         Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -110,6 +118,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: 1.0, },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
             texture_albedo: None,
             texture_specular: None,
@@ -128,8 +137,8 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: -1.5, y: 0.0, z: -9.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
-            texture_specular: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
+            texture_albedo: Some(Box::new(TextureCheckered::new())),
+            texture_specular: None,
             texture_emission: None,
         }
     )));
@@ -166,6 +175,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 5.0, z: 0.0, },
         Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
             texture_specular: None,
@@ -178,10 +188,11 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: -5.0, z: 0.0, },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid::new())),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
-            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Box::new(TextureImage::new(TEXTURE_PATH))),
+            texture_specular: None,//Some(Box::new(TextureImage::new(TEXTURE_PATH))),
+            texture_emission: Some(Box::new(TextureImage::new(TEXTURE_PATH)))
         }
     )));
 
@@ -190,6 +201,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: -5.0, y: 0.0, z: 0.0, },
         Vec3 { x: 1.0, y: 0.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
             texture_specular: None,
@@ -201,6 +213,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 5.0, y: 0.0, z: 0.0, },
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
             texture_specular: None,//Some(Box::new(TextureSolid::new())),
@@ -212,6 +225,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: -15.0, },
         Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid::new())),
             texture_specular: None,
@@ -223,6 +237,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: 1.0, },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
             texture_specular: None,

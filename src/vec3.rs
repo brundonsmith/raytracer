@@ -42,14 +42,32 @@ impl Vec3 {
         self.z *= scale;
     } 
 
-    pub fn dot(self, other: &Self) -> f32 {
+    pub fn dot(&self, other: &Self) -> f32 {
         self.x * other.x +
         self.y * other.y + 
         self.z * other.z
     }
 
+    pub fn cross(&self, other: &Vec3) -> Vec3 {
+        Vec3 {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x
+        }
+    }
+
     pub fn angle(&self, other: &Vec3) -> f32 {
         ((self * other) / (self.len() * other.len())).acos()
+    }
+
+    pub fn projected_on(&self, other: &Vec3) -> Self {
+        other * (self.dot(other) / other.dot(other))
+    }
+
+    pub fn rotated_around(&self, other: &Vec3, theta: f32) -> Vec3 {
+        let cos_theta = theta.cos();
+        &(&(self * cos_theta) + &(&other.cross(self) * theta.sin())) + &(other * (other.dot(self) * (1.0 - cos_theta)))
+        // Vrot = self * cos(theta) + (other x self) * sin(theta) + k * (k * v) * (1 - cos(theta))
     }
 }
 
