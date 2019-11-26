@@ -20,7 +20,6 @@ use std::time::{Duration,Instant};
 mod color;
 mod fidelity_consts;
 mod frame;
-mod illumination_memoization;
 mod illumination;
 mod intersection;
 mod material;
@@ -39,9 +38,8 @@ mod vec3;
 mod timing;
 
 use color::Color;
-use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH,CELLS};
+use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH,CELLS,PRECALCULATED_SAMPLES};
 use frame::Frame;
-use illumination_memoization::{find_memoized_illumination,memoize_illumination,print_memoization};
 use illumination::{Illumination,integrate};
 use intersection::Intersection;
 use utils::clamp;
@@ -122,8 +120,6 @@ fn ray_trace<'a>() -> Frame {
     finish("cast ray -> other");
     finish("cast ray -> other -> rand gen");
 
-    print_memoization();
-
     println!("Total time: {}s", Instant::now().duration_since(start_time).as_millis() as f32 / 1000.0);
     println!("done");
 
@@ -186,53 +182,54 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
             let nearest_object = &objs[object_index];
             let mut intersection = nearest_intersection.unwrap(); // if we have nearest_object_index, we have nearest_intersection
 
-            //find_memoized_illumination(object_index, &intersection.position)
-                //.unwrap_or({
+            // HACK: This is a weird relationship between Material and cast_ray; assumption is made that 
+            // if a texture exists, the corresponding illumination will be passed to shade(). Can
+            // probably be improved somehow.
+            let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
+                let sample_rays = get_sample_rays(&mut intersection, valid_diffuse_sample, rng, PI / 2.0);
 
-                    // HACK: This is a weird relationship between Material and cast_ray; assumption is made that 
-                    // if a texture exists, the corresponding illumination will be passed to shade(). Can
-                    // probably be improved somehow.
-                    let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
-                        let sample_rays = get_sample_rays(&mut intersection, valid_diffuse_sample, rng);
+                let mut samples = [Illumination::new();SAMPLE_COUNT];
+                for i in 0..SAMPLE_COUNT {
+                    samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                }
 
-                        let mut samples = [Illumination::new();SAMPLE_COUNT];
-                        for i in 0..SAMPLE_COUNT {
-                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                        }
+                let illumination = integrate(&samples);
 
-                        let illumination = integrate(&samples);
+                illumination
+            });
 
-                        illumination
-                    });
+            let uv = nearest_object.texture_coordinate(&intersection.position);
 
-                    let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|_| {
-                        let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng);
+            //let mut bail_specular = false;
+            let mut specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
+                //if texture.color_at(uv).0 > 0.01 {
+                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, texture.color_at(uv).0 * PI / 2.0);
 
-                        let mut samples = [Illumination::new();SAMPLE_COUNT];
-                        for i in 0..SAMPLE_COUNT {
-                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                        }
-                        
-                        let illumination = integrate(&samples);
+                    let mut samples = [Illumination::new();SAMPLE_COUNT];
+                    for i in 0..SAMPLE_COUNT {
+                        samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                    }
+                    
+                    let illumination = integrate(&samples);
 
-                        illumination
-                    });
+                    return illumination;
+                //} else {
+                //    bail_specular = true;
+                //    return Illumination::new();
+                //}
+            });
+            // HACK
+            //if bail_specular { specular_illumination = None; }
 
-                    let uv = nearest_object.texture_coordinate(&intersection.position);
+            let illumination = nearest_object.get_material().shade(
+                &intersection, 
+                uv,
+                &diffuse_illumination, 
+                &specular_illumination
+            );
 
-                    let pos = intersection.position.clone();
 
-                    let illumination = nearest_object.get_material().shade(
-                        &intersection, 
-                        uv,
-                        &diffuse_illumination, 
-                        &specular_illumination
-                    );
-
-                    //memoize_illumination(object_index, pos, illumination.clone());
-
-                    illumination
-                //})
+            illumination
         })
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
@@ -242,7 +239,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
 }
 
 
-fn get_sample_rays<F: Fn(&mut Intersection, &Ray) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng) -> [Ray;SAMPLE_COUNT] {
+fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
 
     let mut i = 0;
@@ -253,7 +250,7 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray) -> bool>(intersection: &mut In
         //stop("cast ray -> other -> rand gen");
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area
-        if predicate(intersection, &ray) {
+        if predicate(intersection, &ray, range) {
             //stop("cast ray -> other");
             rays[i] = ray;
             //start("cast ray -> other");
@@ -265,14 +262,14 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray) -> bool>(intersection: &mut In
     return rays;
 }
 
-fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray) -> bool {
+fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
     //                                            angle < PI / 2.0
-    sample_ray.direction.angle(&intersection.normal) * 2.0 < PI
+    sample_ray.direction.angle(&intersection.normal) < range
 }
 
-fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray) -> bool {
+fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
     // HACK: Factor in an actual "smoothness" value instead of PI / 64.0
-    sample_ray.direction.angle(&intersection.reflected_direction()) * 32.0 < PI
+    sample_ray.direction.angle(&intersection.reflected_direction()) < range
 }
 
 /**
