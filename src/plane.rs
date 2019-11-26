@@ -6,6 +6,7 @@ use crate::ray::Ray;
 use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
+use crate::utils::plane_intersection;
 
 pub struct Plane {
     pub position: Vec3,
@@ -37,22 +38,7 @@ impl Plane {
 impl Object for Plane {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
-        let numerator = (&self.position - &ray.origin).dot(&self.normal);
-        let denominator = ray.direction.dot(&self.normal);
-        let distance = numerator / denominator;
-
-        if distance > 0.0 {
-            let point = &ray.origin + &(&ray.direction * distance);
-
-            return Some(Intersection::new(
-                distance,
-                &point + &(&self.normal * 0.01), // offset to avoid floating-point error
-                self.normal,
-                ray.direction,
-            ));
-        } else {
-            return None;
-        };
+        plane_intersection(&self.position, &self.normal, ray)
     }
 
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {

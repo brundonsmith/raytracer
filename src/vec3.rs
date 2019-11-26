@@ -60,6 +60,10 @@ impl Vec3 {
         ((self * other) / (self.len() * other.len())).acos()
     }
 
+    pub fn perpendicular_to(&self, other: &Vec3) -> bool {
+        self.dot(other) < 0.01
+    }
+
     pub fn projected_on(&self, other: &Vec3) -> Self {
         other * (self.dot(other) / other.dot(other))
     }

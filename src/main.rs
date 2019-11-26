@@ -36,6 +36,8 @@ mod texture;
 mod utils;
 mod vec3;
 mod timing;
+mod mesh;
+mod obj_importer;
 
 use color::Color;
 use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH,CELLS,PRECALCULATED_SAMPLES};
@@ -200,26 +202,18 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
 
             let uv = nearest_object.texture_coordinate(&intersection.position);
 
-            //let mut bail_specular = false;
-            let mut specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
-                //if texture.color_at(uv).0 > 0.01 {
-                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, 1.0 - 0.6 * (texture.color_at(uv).0 * PI / 2.0));
+            let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
+                let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, (1.0 - texture.color_at(uv).0) * PI / 2.0);
 
-                    let mut samples = [Illumination::new();SAMPLE_COUNT];
-                    for i in 0..SAMPLE_COUNT {
-                        samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                    }
-                    
-                    let illumination = integrate(&samples);
+                let mut samples = [Illumination::new();SAMPLE_COUNT];
+                for i in 0..SAMPLE_COUNT {
+                    samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                }
+                
+                let illumination = integrate(&samples);
 
-                    return illumination;
-                //} else {
-                //    bail_specular = true;
-                //    return Illumination::new();
-                //}
+                return illumination;
             });
-            // HACK
-            //if bail_specular { specular_illumination = None; }
 
             let illumination = nearest_object.get_material().shade(
                 &intersection, 

@@ -4,12 +4,14 @@ use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::object::Object;
 use crate::sphere::Sphere;
+use crate::mesh::{Mesh,Face};
 use crate::plane::Plane;
 use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
 use crate::texture_image::TextureImage;
 
 const TEXTURE_PATH: &str = "C:\\Users\\Brundon\\git\\raytracer\\texture.jpg";
+const MESH_PATH: &str = "C:\\Users\\Brundon\\git\\raytracer\\test.obj";
 
 pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
@@ -53,15 +55,44 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         }
     )));*/
     
+    /*
     objs.push(Box::new(Sphere::new(
         Vec3 { x: 0.0, y: 0.0, z: -5.0 },
         1.0,
         Material {
             texture_albedo: None,//Some(Box::new(TextureCheckered::from_colors(Color(1.0,1.0,1.0), Color(0.0,0.0,0.0)))),
-            texture_specular: Some(Box::new(TextureCheckered::from_colors(Color(1.0,1.0,1.0), Color(0.0,0.0,0.0)))),
+            texture_specular: Some(Box::new(TextureCheckered::from_colors(Color(0.6,0.6,0.6), Color(0.01,0.01,0.01)))),
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
-    )));
+    )));*/
+
+    /*
+    objs.push(Box::new(Mesh {
+        position: Vec3 { x: 0.0, y: 0.0, z: -5.0 },
+        material: Material {
+            texture_albedo: Some(Box::new(TextureCheckered::new())),
+            texture_specular: None,
+            texture_emission: None,
+        },
+        vertices: vec![
+            Vec3 { x: 0.0, y: 0.0, z: -5.0 },
+            Vec3 { x: 1.0, y: 0.0, z: -5.0 },
+            Vec3 { x: 1.0, y: 1.0, z: -6.0 },
+        ],
+        faces: vec![
+            Face (0, 1, 2)
+        ],
+        uv_coords: vec![]
+    }));*/
+
+    let mut obj = Mesh::from_obj(MESH_PATH);
+    obj.position = Vec3 { x: 0.0, y: -2.0, z: -5.0 };
+    obj.material = Material {
+        texture_albedo: Some(Box::new(TextureSolid::new())),
+        texture_specular: None,
+        texture_emission: None,
+    };
+    objs.push(Box::new(obj));
 
     /*
     for _ in 0..10 {
