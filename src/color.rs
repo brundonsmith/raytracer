@@ -50,3 +50,15 @@ impl std::ops::Mul<f32> for Color {
         )
     }
 }
+
+impl std::ops::Div<usize> for Color {
+    type Output = Color;
+    
+    fn div(self, divisor: usize) -> Self::Output {
+        Color (
+            self.0 / divisor as f32, 
+            self.1 / divisor as f32, 
+            self.2 / divisor as f32, 
+        )
+    }
+}
