@@ -203,7 +203,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
             //let mut bail_specular = false;
             let mut specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
                 //if texture.color_at(uv).0 > 0.01 {
-                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, texture.color_at(uv).0 * PI / 2.0);
+                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, 1.0 - 0.6 * (texture.color_at(uv).0 * PI / 2.0));
 
                     let mut samples = [Illumination::new();SAMPLE_COUNT];
                     for i in 0..SAMPLE_COUNT {

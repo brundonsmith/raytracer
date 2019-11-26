@@ -111,7 +111,7 @@ impl Material {
         match &self.texture_emission {
             Some(texture) => {
                 illumination.color = texture.color_at(uv);
-                illumination.intensity = 1.0; // TODO: Get this from alpha
+                illumination.intensity = 3.0; // TODO: Get this from alpha
                 elements += 1.0;
             },
             None => ()
