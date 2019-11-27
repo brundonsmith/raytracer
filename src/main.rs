@@ -37,7 +37,7 @@ mod utils;
 mod vec3;
 mod timing;
 mod mesh;
-mod obj_importer;
+mod obj_parser;
 
 use color::Color;
 use fidelity_consts::{RESOLUTION,SAMPLE_COUNT,MAX_DEPTH,CELLS,PRECALCULATED_SAMPLES};

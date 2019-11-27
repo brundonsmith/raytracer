@@ -1,30 +1,15 @@
 
-use std::fs;
-
-use crate::mesh::{Mesh,Face};
-use crate::vec3::Vec3;
-
-pub fn import_obj(path: &str) -> Mesh {
-    let data = fs::read_to_string(path).expect("Failed to open mesh file");
-
-    println!("Loading obj...");
-
-    let mut mesh = Mesh::new();
-
-    for line in data.split("\n") {
-        match parse(line) {
-            LineType::Vertex(x, y, z) => mesh.vertices.push(Vec3 { x, y, z }),
-            LineType::Face(v0, v1, v2) => mesh.faces.push(Face(v0.0, v1.0, v2.0)),
-            _ => ()
-        }
-    }
+pub fn parse(obj: &str) -> Vec<LineType> {
+    let mut lines = Vec::new();
     
-    println!("done");
+    for line in obj.split("\n") {
+        lines.push(parse_line(line));
+    }
 
-    return mesh;
+    return lines;
 }
 
-fn parse(line: &str) -> LineType {
+pub fn parse_line(line: &str) -> LineType {
     let segments: Vec<&str> = line.trim().split(" ").collect();
 
     match segments[0] {
@@ -60,7 +45,7 @@ fn parse_face_vertex(segment: &str) -> FaceVertex {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum LineType {
+pub enum LineType {
     Comment(String),
     Object(String),
     Vertex(f32, f32, f32),
@@ -72,4 +57,4 @@ enum LineType {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-struct FaceVertex (pub usize, pub Option<usize>, pub Option<usize>);
+pub struct FaceVertex (pub usize, pub Option<usize>, pub Option<usize>);

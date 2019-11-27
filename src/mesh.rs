@@ -1,4 +1,5 @@
 
+use std::fs;
 
 use crate::vec3::Vec3;
 use crate::ray::Ray;
@@ -6,8 +7,8 @@ use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
 use crate::utils::{plane_intersection};
-use crate::obj_importer::import_obj;
 use crate::sphere::Sphere;
+use crate::obj_parser::{parse,LineType};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Face (pub usize, pub usize, pub usize);
@@ -16,39 +17,50 @@ pub struct Mesh {
     position: Vec3,
     material: Material,
 
-    pub vertices: Vec<Vec3>,
-    pub faces: Vec<Face>,
-    pub uv_coords: Vec<(f32,f32)>,
+    vertices: Vec<Vec3>,
+    faces: Vec<Face>,
+    uv_coords: Vec<(f32,f32)>,
 
     bounding_sphere: Sphere,
 }
 
 impl Mesh {
 
-    pub fn new() -> Self {
-        let position = Vec3::new();
-        let vertices = Vec::new();
+    pub fn new(position: Vec3, material: Material, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
         let bounding_sphere = get_bounding_sphere(&position, &vertices);
 
         Self {
             position,
-            material: Material::new(),
+            material,
             vertices,
-            faces: Vec::new(),
-            uv_coords: Vec::new(),
+            faces,
+            uv_coords,
 
             bounding_sphere
         }
     }
 
     pub fn from_obj(path: &str, position: Vec3, material: Material) -> Self {
-        let mut obj = import_obj(path);
+        let data = fs::read_to_string(path).expect("Failed to open mesh file");
 
-        obj.position = position;
-        obj.material = material;
-        obj.bounding_sphere = get_bounding_sphere(&position, &obj.vertices);
+        println!("Loading obj...");
 
-        return obj;
+        let mut vertices = Vec::new();
+        let mut faces = Vec::new();
+        let uv_coords = Vec::new();
+
+
+        for line in parse(&data) {
+            match line {
+                LineType::Vertex(x, y, z) => vertices.push(Vec3 { x, y, z }),
+                LineType::Face(v0, v1, v2) => faces.push(Face(v0.0, v1.0, v2.0)),
+                _ => ()
+            }
+        }
+        
+        println!("done");
+        
+        return Mesh::new(position, material, vertices, faces, uv_coords);
     }
 }
 
