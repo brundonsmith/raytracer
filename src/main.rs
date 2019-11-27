@@ -203,7 +203,15 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
             let uv = nearest_object.texture_coordinate(&intersection.position);
 
             let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
-                let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, (1.0 - texture.color_at(uv).0) * PI / 2.0);
+                let specularity = texture.color_at(uv).0;
+                
+                if specularity > 0.99 {
+                    return cast_ray(&Ray {
+                        origin: intersection.position,
+                        direction: intersection.reflected_direction().clone()
+                    }, objs, rng, depth - 1);
+                } else {
+                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
 
                 let mut samples = [Illumination::new();SAMPLE_COUNT];
                 for i in 0..SAMPLE_COUNT {
@@ -213,6 +221,7 @@ fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut Thre
                 let illumination = integrate(&samples);
 
                 return illumination;
+                }
             });
 
             let illumination = nearest_object.get_material().shade(
