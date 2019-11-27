@@ -126,14 +126,12 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         uv_coords: vec![]
     }));*/
 
-    let mut obj = Mesh::from_obj("C:\\Users\\Brundon\\git\\raytracer\\test.obj");
-    obj.position = Vec3 { x: 0.0, y: -2.0, z: -5.0 };
-    obj.material = Material {
+    let obj = Mesh::from_obj("C:\\Users\\Brundon\\git\\raytracer\\test.obj", Vec3 { x: 0.0, y: -2.0, z: -5.0 }, Material {
         texture_albedo: Some(Box::new(TextureSolid::new())),
         texture_specular: None,
         texture_normal: None,
         texture_emission: None,
-    };
+    });
     objs.push(Box::new(obj));
 
     /*

@@ -13,45 +13,63 @@ use crate::sphere::Sphere;
 pub struct Face (pub usize, pub usize, pub usize);
 
 pub struct Mesh {
-    pub position: Vec3,
-    pub material: Material,
+    position: Vec3,
+    material: Material,
 
     pub vertices: Vec<Vec3>,
     pub faces: Vec<Face>,
     pub uv_coords: Vec<(f32,f32)>,
+
+    bounding_sphere: Sphere,
 }
 
 impl Mesh {
 
     pub fn new() -> Self {
+        let position = Vec3::new();
+        let vertices = Vec::new();
+        let bounding_sphere = get_bounding_sphere(&position, &vertices);
+
         Self {
-            position: Vec3::new(),
+            position,
             material: Material::new(),
-            vertices: Vec::new(),
+            vertices,
             faces: Vec::new(),
             uv_coords: Vec::new(),
+
+            bounding_sphere
         }
     }
 
-    pub fn from_obj(path: &str) -> Self {
-        import_obj(path)
+    pub fn from_obj(path: &str, position: Vec3, material: Material) -> Self {
+        let mut obj = import_obj(path);
+
+        obj.position = position;
+        obj.material = material;
+        obj.bounding_sphere = get_bounding_sphere(&position, &obj.vertices);
+
+        return obj;
     }
+}
+
+fn get_bounding_sphere(position: &Vec3, vertices: &Vec<Vec3>) -> Sphere {
+    let mut farthest_vertex_squared = 0.0;
+
+    for v in vertices {
+        let len_squared = (v - position).len_squared();
+        if len_squared > farthest_vertex_squared {
+            farthest_vertex_squared = len_squared;
+        }
+    }
+
+    return Sphere::new(position.clone(), farthest_vertex_squared.sqrt(), Material::new());
 }
 
 impl Object for Mesh {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         
-        let mut farthest_vertex_squared = 0.0;
-        for v in &self.vertices {
-            let len_squared = (v - &self.position).len_squared();
-            if len_squared > farthest_vertex_squared {
-                farthest_vertex_squared = len_squared;
-            }
-        }
-        let bounding_sphere = Sphere::new(self.position, farthest_vertex_squared.sqrt(), Material::new());
-
-        if bounding_sphere.intersection(ray).is_none() {
+        if self.bounding_sphere.intersection(ray).is_none() {
             return None;
         } else {
             let mut nearest_intersection: Option<Intersection> = None;
