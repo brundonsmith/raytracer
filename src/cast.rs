@@ -1,12 +1,10 @@
 
-use std::f32::consts::PI;
-
 use rand::rngs::ThreadRng;
 
 use crate::ray::Ray;
 use crate::intersection::Intersection;
 use crate::object::Object;
-use crate::illumination::{Illumination,integrate};
+use crate::illumination::{Illumination};
 use crate::color::Color;
 use crate::fidelity_consts::{SAMPLE_COUNT};
 
@@ -43,56 +41,8 @@ pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut 
         .map(|object_index| {
             let nearest_object = &objs[object_index];
             let mut intersection = nearest_intersection.unwrap(); // if we have nearest_object_index, we have nearest_intersection
-
-            // HACK: This is a weird relationship between Material and cast_ray; assumption is made that 
-            // if a texture exists, the corresponding illumination will be passed to shade(). Can
-            // probably be improved somehow.
-            let diffuse_illumination: Option<Illumination> = nearest_object.get_material().texture_albedo.as_ref().map(|_| {
-                let sample_rays = get_sample_rays(&mut intersection, valid_diffuse_sample, rng, PI / 2.0);
-
-                let mut samples = [Illumination::new();SAMPLE_COUNT];
-                for i in 0..SAMPLE_COUNT {
-                    samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                }
-
-                let illumination = integrate(&samples);
-
-                illumination
-            });
-
             let uv = nearest_object.texture_coordinate(&intersection.position);
-
-            let specular_illumination: Option<Illumination> = nearest_object.get_material().texture_specular.as_ref().map(|texture| {
-                let specularity = texture.color_at(uv).0;
-                
-                if specularity > 0.99 {
-                    return cast_ray(&Ray {
-                        origin: intersection.position,
-                        direction: intersection.reflected_direction().clone()
-                    }, objs, rng, depth - 1);
-                } else {
-                    let sample_rays = get_sample_rays(&mut intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
-
-                let mut samples = [Illumination::new();SAMPLE_COUNT];
-                for i in 0..SAMPLE_COUNT {
-                    samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                }
-                
-                let illumination = integrate(&samples);
-
-                return illumination;
-                }
-            });
-
-            let illumination = nearest_object.get_material().shade(
-                &intersection, 
-                uv,
-                &diffuse_illumination, 
-                &specular_illumination
-            );
-
-
-            illumination
+            nearest_object.get_material().shade(&mut intersection, uv, objs, rng, depth)
         })
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
@@ -100,7 +50,7 @@ pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut 
 }
 
 
-fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng, range: f32) -> [Ray;SAMPLE_COUNT] {
+pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
 
     let mut i = 0;
@@ -115,12 +65,4 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &m
     }
 
     return rays;
-}
-
-fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    sample_ray.direction.angle(&intersection.normal) < range
-}
-
-fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    sample_ray.direction.angle(&intersection.reflected_direction()) < range
 }

@@ -1,8 +1,15 @@
+use std::f32::consts::PI;
 
-use crate::illumination::Illumination;
+use rand::rngs::ThreadRng;
+
+use crate::illumination::{Illumination,integrate};
 use crate::texture::Texture;
 use crate::color::Color;
 use crate::intersection::Intersection;
+use crate::cast::{cast_ray,get_sample_rays};
+use crate::fidelity_consts::{SAMPLE_COUNT};
+use crate::ray::Ray;
+use crate::object::Object;
 
 pub struct Material {
     pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
@@ -22,10 +29,44 @@ impl Material {
         }
     }
 
-    pub fn shade(&self, intersection: &Intersection, uv: (f32,f32), diffuse_illumination: &Option<Illumination>, specular_illumination: &Option<Illumination>) -> Illumination {
+    pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut ThreadRng, depth: u8) -> Illumination {
+
+        let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|_| {
+            let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI / 2.0);
+
+            let mut samples = [Illumination::new();SAMPLE_COUNT];
+            for i in 0..SAMPLE_COUNT {
+                samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+            }
+
+            let illumination = integrate(&samples);
+
+            illumination
+        });
+
+        let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
+            let specularity = texture.color_at(uv).0;
+            
+            if specularity > 0.99 {
+                return cast_ray(&Ray {
+                    origin: intersection.position,
+                    direction: intersection.reflected_direction().clone()
+                }, objs, rng, depth - 1);
+            } else {
+                let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
+
+                let mut samples = [Illumination::new();SAMPLE_COUNT];
+                for i in 0..SAMPLE_COUNT {
+                    samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                }
+                
+                let illumination = integrate(&samples);
+
+                return illumination;
+            }
+        });
+
         let mut illumination = Illumination::new();
-
-
 
         let mut color_elements = 1.0;
         illumination.color = self.intrinsic_color_at(uv);
@@ -134,4 +175,12 @@ impl Material {
 
         return illumination;
     }
+}
+
+fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
+    sample_ray.direction.angle(&intersection.normal) < range
+}
+
+fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
+    sample_ray.direction.angle(&intersection.reflected_direction()) < range
 }

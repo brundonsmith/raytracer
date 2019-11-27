@@ -69,8 +69,6 @@ fn ray_trace<'a>() -> Frame {
 
     // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
 
-    //start("raytrace");
-
     crossbeam::scope(move |scope| {
         let row_column_count = (CELLS as f32).sqrt().round() as usize;
         let cell_size = RESOLUTION / row_column_count;
@@ -103,13 +101,6 @@ fn ray_trace<'a>() -> Frame {
             }
         }
     }).unwrap();
-
-    /*
-    finish("raytrace");
-    finish("cast ray");
-    finish("cast ray -> find nearest");
-    finish("cast ray -> other");
-    finish("cast ray -> other -> rand gen");*/
 
     println!("Total time: {}s", Instant::now().duration_since(start_time).as_millis() as f32 / 1000.0);
     println!("done");
