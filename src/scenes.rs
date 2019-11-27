@@ -10,9 +10,6 @@ use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
 use crate::texture_image::TextureImage;
 
-const TEXTURE_PATH: &str = "C:\\Users\\Brundon\\git\\raytracer\\texture.jpg";
-const MESH_PATH: &str = "C:\\Users\\Brundon\\git\\raytracer\\test.obj";
-
 pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
 
@@ -22,6 +19,7 @@ pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid::new())),
             texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new()))
         }
     )));
@@ -32,7 +30,50 @@ pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: Some(Box::new(TextureSolid::new())),
+            texture_specular: Some(Box::new(TextureSolid { color: Color(0.9, 0.9, 0.9) })),
+            texture_normal: None,
+            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+        }
+    )));
+
+    return objs;
+}
+
+pub fn construct_material_scene() -> Vec<Box<dyn Object + Sync + Send>> {
+    let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
+
+    objs.push(Box::new(Sphere::new(
+        Vec3 { x: 0.0, y: 0.0, z: -12.0 },
+        1.0,
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
+            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) }))
+        }
+    )));
+
+    // ceiling
+    objs.push(Box::new(Plane::new(
+        Vec3 { x: 0.0, y: 5.0, z: 0.0, },
+        Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
+        }
+    )));
+
+    objs.push(Box::new(Plane::new(
+        Vec3 { x: 0.0, y: -1.5, z: 0.0, },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
+            texture_specular: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\CobblestoneSpecular.jpg"))),
+            texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -85,11 +126,12 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         uv_coords: vec![]
     }));*/
 
-    let mut obj = Mesh::from_obj(MESH_PATH);
+    let mut obj = Mesh::from_obj("C:\\Users\\Brundon\\git\\raytracer\\test.obj");
     obj.position = Vec3 { x: 0.0, y: -2.0, z: -5.0 };
     obj.material = Material {
         texture_albedo: Some(Box::new(TextureSolid::new())),
         texture_specular: None,
+        texture_normal: None,
         texture_emission: None,
     };
     objs.push(Box::new(obj));
@@ -120,6 +162,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
         }
     )));
@@ -131,9 +174,10 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new(TEXTURE_PATH))),
-            texture_specular: None,//Some(Box::new(TextureImage::new(TEXTURE_PATH))),
-            texture_emission: None,//Some(Box::new(TextureImage::new(TEXTURE_PATH)))
+            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
+            texture_specular: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
+            texture_normal: None,
+            texture_emission: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg")))
         }
     )));
 
@@ -146,6 +190,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
             texture_specular: None,
+            texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
         }
     )));
@@ -158,6 +203,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
             texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
         }
     )));
@@ -170,6 +216,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: Some(Box::new(TextureSolid::new())),
             texture_specular: None,
+            texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -182,6 +229,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
             texture_specular: None,
+            texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
         }
     )));
@@ -196,8 +244,9 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 0.0, z: -5.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new(TEXTURE_PATH))),
+            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
             texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
             texture_emission: None,
         }
     )));
@@ -211,6 +260,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -224,6 +274,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -237,6 +288,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -249,6 +301,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -261,6 +314,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));
@@ -273,6 +327,7 @@ pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
         Material {
             texture_albedo: None,
             texture_specular: None,
+            texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid::new())),
         }
     )));

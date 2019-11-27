@@ -7,6 +7,7 @@ use crate::intersection::Intersection;
 use crate::material::Material;
 use crate::utils::{plane_intersection};
 use crate::obj_importer::import_obj;
+use crate::sphere::Sphere;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Face (pub usize, pub usize, pub usize);
@@ -17,7 +18,7 @@ pub struct Mesh {
 
     pub vertices: Vec<Vec3>,
     pub faces: Vec<Face>,
-    pub uv_coords: Vec<(f32,f32)>
+    pub uv_coords: Vec<(f32,f32)>,
 }
 
 impl Mesh {
@@ -25,11 +26,7 @@ impl Mesh {
     pub fn new() -> Self {
         Self {
             position: Vec3::new(),
-            material: Material {
-                texture_albedo: None,
-                texture_specular: None,
-                texture_emission: None,
-            },
+            material: Material::new(),
             vertices: Vec::new(),
             faces: Vec::new(),
             uv_coords: Vec::new(),
@@ -44,44 +41,50 @@ impl Mesh {
 impl Object for Mesh {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
-        let mut nearest_intersection: Option<Intersection> = None;
-        //println!("begin");
-
-        for face in &self.faces {
-            let vert0 = &(&self.vertices[face.0] * 0.5) + &self.position;
-            //println!("{:?}", &vert0);
-            let vert1 = &(&self.vertices[face.1] * 0.5) + &self.position;
-            let vert2 = &(&self.vertices[face.2] * 0.5) + &self.position;
-            let normal = triangle_normal(&vert0, &vert1, &vert2);
-
-            match plane_intersection(&vert0, &normal, ray) {
-                Some(intersection) => {
-                    //println!("some intersection");
-                    if intersection.distance > 0.0 && nearest_intersection.as_ref().map(|nearest| intersection.distance < nearest.distance).unwrap_or(true) {
-                        //println!("intersection of interest");
-                        let edge0 = &vert1 - &vert0; 
-                        let edge1 = &vert2 - &vert1; 
-                        let edge2 = &vert0 - &vert2; 
-                        let c0 = &intersection.position - &vert0; 
-                        let c1 = &intersection.position - &vert1; 
-                        let c2 = &intersection.position - &vert2; 
-                        //println!("check");
-                        if  normal.dot(&edge0.cross(&c0)) > 0.0 && 
-                            normal.dot(&edge1.cross(&c1)) > 0.0 && 
-                            normal.dot(&edge2.cross(&c2)) > 0.0 {
-                            //println!("found");
-                            nearest_intersection = Some(intersection); // P is inside the triangle
-                        }
-                    }
-                },
-                None => ()
-            };
-
-            //println!("end loop");
+        
+        let mut farthest_vertex_squared = 0.0;
+        for v in &self.vertices {
+            let len_squared = (v - &self.position).len_squared();
+            if len_squared > farthest_vertex_squared {
+                farthest_vertex_squared = len_squared;
+            }
         }
+        let bounding_sphere = Sphere::new(self.position, farthest_vertex_squared.sqrt(), Material::new());
 
-        //println!("return");
-        return nearest_intersection;
+        if bounding_sphere.intersection(ray).is_none() {
+            return None;
+        } else {
+            let mut nearest_intersection: Option<Intersection> = None;
+
+            for face in &self.faces {
+                let vert0 = &(&self.vertices[face.0] * 0.5) + &self.position;
+                let vert1 = &(&self.vertices[face.1] * 0.5) + &self.position;
+                let vert2 = &(&self.vertices[face.2] * 0.5) + &self.position;
+                let normal = triangle_normal(&vert0, &vert1, &vert2);
+
+                match plane_intersection(&vert0, &normal, ray) {
+                    Some(intersection) => {
+                        if intersection.distance > 0.0 && nearest_intersection.as_ref().map(|nearest| intersection.distance < nearest.distance).unwrap_or(true) {
+                            let edge0 = &vert1 - &vert0; 
+                            let edge1 = &vert2 - &vert1; 
+                            let edge2 = &vert0 - &vert2; 
+                            let c0 = &intersection.position - &vert0; 
+                            let c1 = &intersection.position - &vert1; 
+                            let c2 = &intersection.position - &vert2; 
+                            if  normal.dot(&edge0.cross(&c0)) > 0.0 && 
+                                normal.dot(&edge1.cross(&c1)) > 0.0 && 
+                                normal.dot(&edge2.cross(&c2)) > 0.0 {
+
+                                nearest_intersection = Some(intersection); // P is inside the triangle
+                            }
+                        }
+                    },
+                    None => ()
+                };
+            }
+
+            return nearest_intersection;
+        }
     }
 
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {

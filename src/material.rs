@@ -7,10 +7,20 @@ use crate::intersection::Intersection;
 pub struct Material {
     pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
     pub texture_specular: Option<Box<dyn Texture + Sync + Send>>,
+    pub texture_normal: Option<Box<dyn Texture + Sync + Send>>,
     pub texture_emission: Option<Box<dyn Texture + Sync + Send>>,
 }
 
 impl Material {
+
+    pub fn new() -> Self {
+        Self {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission: None,
+        }
+    }
 
     pub fn shade(&self, intersection: &Intersection, uv: (f32,f32), diffuse_illumination: &Option<Illumination>, specular_illumination: &Option<Illumination>) -> Illumination {
         let mut illumination = Illumination::new();
