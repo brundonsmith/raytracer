@@ -1,0 +1,8 @@
+- Normal maps
+- Fix plane UV mapping
+- Mesh UV mapping
+- Transparency
+- Atmospheric scattering
+- Denoising trick (increase roughness on each bounce)
+- Proper object transforms, particularly rotation
+- Cheaper RNG (or create rays that are already within range?)
