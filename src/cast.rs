@@ -19,13 +19,11 @@ const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0
  * Cast a single ray, from a pixel or from a bounce
  */
 pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut ThreadRng, depth: u8) -> Illumination {
-    //start("cast ray");
     if depth <= 0 { return BACKGROUND_ILLUMINATION; }
 
     let mut nearest_intersection: Option<Intersection> = None;
     let mut nearest_object_index: Option<usize> = None;
 
-    //start("cast ray -> find nearest");
 
     // Find nearest object intersection
     for index in 0..objs.len() {
@@ -39,9 +37,6 @@ pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut 
             _ => ()
         }
     }
-    //stop("cast ray -> find nearest");
-
-    //start("cast ray -> other");
 
     // Compute total illumination at this intersection
     let nearest_illumination: Illumination = nearest_object_index
@@ -101,8 +96,6 @@ pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut 
         })
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
-    //stop("cast ray -> other");
-    //stop("cast ray");
     return nearest_illumination;
 }
 
@@ -111,18 +104,12 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &m
     let mut rays = [Ray::new();SAMPLE_COUNT];
 
     let mut i = 0;
-    while i < SAMPLE_COUNT {
-        //start("cast ray -> other -> rand gen");
-        
+    while i < SAMPLE_COUNT {        
         let ray = Ray::random_direction(intersection.position, rng);
-        //stop("cast ray -> other -> rand gen");
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area
         if predicate(intersection, &ray, range) {
-            //stop("cast ray -> other");
             rays[i] = ray;
-            //start("cast ray -> other");
-
             i += 1;
         }
     }
@@ -131,11 +118,9 @@ fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &m
 }
 
 fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    //                                            angle < PI / 2.0
     sample_ray.direction.angle(&intersection.normal) < range
 }
 
 fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    // HACK: Factor in an actual "smoothness" value instead of PI / 64.0
     sample_ray.direction.angle(&intersection.reflected_direction()) < range
 }
