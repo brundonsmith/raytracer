@@ -1,5 +1,5 @@
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use crate::ray::Ray;
 use crate::intersection::Intersection;
@@ -16,7 +16,7 @@ const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0
 /**
  * Cast a single ray, from a pixel or from a bounce
  */
-pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut ThreadRng, depth: u8) -> Illumination {
+pub fn cast_ray<R: Rng>(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut R, depth: u8) -> Illumination {
     if depth <= 0 { return BACKGROUND_ILLUMINATION; }
 
     let mut nearest_intersection: Option<Intersection> = None;
@@ -50,7 +50,7 @@ pub fn cast_ray(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut 
 }
 
 
-pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut ThreadRng, range: f32) -> [Ray;SAMPLE_COUNT] {
+pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool, R: Rng>(intersection: &mut Intersection, predicate: F, rng: &mut R, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
 
     let mut i = 0;

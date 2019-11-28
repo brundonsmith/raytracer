@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use crate::illumination::{Illumination,integrate};
 use crate::texture::Texture;
@@ -29,7 +29,7 @@ impl Material {
         }
     }
 
-    pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut ThreadRng, depth: u8) -> Illumination {
+    pub fn shade<R: Rng>(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut R, depth: u8) -> Illumination {
 
         let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|_| {
             let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI / 2.0);

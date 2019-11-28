@@ -1,6 +1,5 @@
 
-use rand::rngs::ThreadRng;
-use rand::{Rng};
+use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::vec3::Vec3;
@@ -21,7 +20,7 @@ impl Ray {
         }
     }
 
-    pub fn random_direction(origin: Vec3, rng: &mut ThreadRng) -> Self {
+    pub fn random_direction<R: Rng>(origin: Vec3, rng: &mut R) -> Self {
         Self {
             origin,
             direction: Vec3::from_angles(
