@@ -27,7 +27,7 @@ pub struct Mesh {
 impl Mesh {
 
     pub fn new(position: Vec3, material: Material, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
-        let bounding_sphere = get_bounding_sphere(&position, &vertices);
+        let bounding_sphere = get_bounding_sphere(&vertices);
 
         Self {
             position,
@@ -49,10 +49,9 @@ impl Mesh {
         let mut faces = Vec::new();
         let uv_coords = Vec::new();
 
-
         for line in parse(&data) {
             match line {
-                LineType::Vertex(x, y, z) => vertices.push(Vec3 { x, y, z }),
+                LineType::Vertex(x, y, z) => vertices.push(Vec3 { x: x + position.x, y: y + position.y, z: z + position.z }),
                 LineType::Face(v0, v1, v2) => faces.push(Face(v0.0, v1.0, v2.0)),
                 _ => ()
             }
@@ -64,7 +63,7 @@ impl Mesh {
     }
 }
 
-fn get_bounding_sphere(position: &Vec3, vertices: &Vec<Vec3>) -> Sphere {
+fn get_bounding_sphere(vertices: &Vec<Vec3>) -> Sphere {
     let mut min = Vec3::new();
     let mut max = Vec3::new();
 
@@ -92,7 +91,7 @@ fn get_bounding_sphere(position: &Vec3, vertices: &Vec<Vec3>) -> Sphere {
         f32::max(f32::abs(min.y - center.y),
         f32::max(f32::abs(min.z - center.z), 0.0))))));
 
-    return Sphere::new(position + &center, radius, Material::new());
+    return Sphere::new(center, radius, Material::new());
 }
 
 impl Object for Mesh {
