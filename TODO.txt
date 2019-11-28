@@ -1,6 +1,5 @@
 - Mesh UV mapping
 - Denoising trick (increase roughness on each bounce)
-- Proper object transforms, particularly rotation
 - Normal maps
 - Transparency
 - Atmospheric scattering

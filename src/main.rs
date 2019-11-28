@@ -62,7 +62,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_plane_texture_test();
+    let objs = construct_room_scene();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);

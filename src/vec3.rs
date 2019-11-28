@@ -1,4 +1,5 @@
 
+use crate::matrix::Matrix;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 { 
@@ -11,6 +12,14 @@ impl Vec3 {
 
     pub fn new() -> Self {
         Self { x: 0.0, y: 0.0, z: 0.0 }
+    }
+
+    pub fn from_scalar(val: f32) -> Self {
+        Vec3 {
+            x: val,
+            y: val,
+            z: val
+        }
     }
 
     pub fn from_angles(alpha: f32, beta: f32) -> Self {
@@ -42,11 +51,28 @@ impl Vec3 {
         return result;
     }
 
+    pub fn transformed(&mut self, matrix: &Matrix) -> Self {
+        Vec3 {
+            x:  matrix.get(0, 0) * self.x +
+                matrix.get(0, 1) * self.y +
+                matrix.get(0, 2) * self.z +
+                matrix.get(0, 3),
+            y:  matrix.get(1, 0) * self.x +
+                matrix.get(1, 1) * self.y +
+                matrix.get(1, 2) * self.z +
+                matrix.get(1, 3),
+            z:  matrix.get(2, 0) * self.x +
+                matrix.get(2, 1) * self.y +
+                matrix.get(2, 2) * self.z +
+                matrix.get(2, 3)
+        }
+    }
+
     pub fn scale(&mut self, scale: f32) {
         self.x *= scale;
         self.y *= scale;
         self.z *= scale;
-    } 
+    }
 
     pub fn dot(&self, other: &Self) -> f32 {
         self.x * other.x +

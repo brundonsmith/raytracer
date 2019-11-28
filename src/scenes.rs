@@ -9,6 +9,7 @@ use crate::plane::Plane;
 use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
 use crate::texture_image::TextureImage;
+use crate::matrix::Matrix;
 
 pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
@@ -128,7 +129,9 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
 
     objs.push(Box::new(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/test.obj", 
-        Vec3 { x: 0.0, y: -2.0, z: -5.0 }, 
+        &(&Matrix::translation(&Vec3 { x: 0.0, y: -2.0, z: -5.0 }) *
+        &(&Matrix::rotation_y(std::f32::consts::PI) *
+          &Matrix::scale(&Vec3::from_scalar(0.5)))),
         Material {
             texture_albedo: Some(Box::new(TextureSolid::new())),
             texture_specular: None,

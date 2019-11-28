@@ -9,6 +9,7 @@ use crate::material::Material;
 use crate::utils::{plane_intersection};
 use crate::sphere::Sphere;
 use crate::obj_parser::{parse,LineType};
+use crate::matrix::Matrix;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Face (pub usize, pub usize, pub usize);
@@ -38,7 +39,7 @@ impl Mesh {
         }
     }
 
-    pub fn from_obj(path: &str, position: Vec3, material: Material) -> Self {
+    pub fn from_obj(path: &str, transform: &Matrix, material: Material) -> Self {
         let data = fs::read_to_string(path).expect("Failed to open mesh file");
 
         println!("Loading obj...");
@@ -49,11 +50,7 @@ impl Mesh {
 
         for line in parse(&data) {
             match line {
-                LineType::Vertex(x, y, z) => vertices.push(Vec3 { 
-                    x: x * 0.5 + position.x, 
-                    y: y * 0.5 + position.y, 
-                    z: z * 0.5 + position.z }),
-                    // HACK: Temporary halving just for this mesh. Roll scale in with general transformation later.
+                LineType::Vertex(x, y, z) => vertices.push(Vec3 { x, y, z }.transformed(transform)),
                 LineType::Face(v0, v1, v2) => faces.push(Face(v0.0, v1.0, v2.0)),
                 _ => ()
             }
