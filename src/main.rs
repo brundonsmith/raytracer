@@ -1,7 +1,9 @@
 #![allow(unused_doc_comments)]
 
 extern crate rand;
+use rand::prelude::*;
 use rand::{thread_rng};
+use rand::rngs::SmallRng;
 extern crate image;
 use image::{ImageBuffer, Rgb};
 extern crate crossbeam;
@@ -76,16 +78,20 @@ fn ray_trace<'a>() -> Frame {
         print!("0.00%");
         std::io::stdout().flush().ok().expect("");
 
+        let mut meta_rng = thread_rng();
+
         for x_cell in 0..row_column_count {
             for y_cell in 0..row_column_count {
                 let objs_arc_clone = objs_arc.clone();
                 let frame_mutex_arc_clone = frame_mutex_arc.clone();
                 let cells_done_mutex_arc_clone = cells_done_mutex_arc.clone();
+                let rng = SmallRng::from_rng(&mut meta_rng).unwrap();
                 
                 scope.spawn(move |_| {
                     ray_trace_cell(
                         frame_mutex_arc_clone, 
                         objs_arc_clone, 
+                        rng,
                         x_cell * cell_size, 
                         y_cell * cell_size, 
                         (x_cell + 1) * cell_size, 
@@ -111,8 +117,7 @@ fn ray_trace<'a>() -> Frame {
 /**
  * Raytrace one square sub-portion of the image (exists to facilitate threading)
  */
-fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Object + Sync + Send>>>, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
-    let mut rng = thread_rng();
+fn ray_trace_cell<R: Rng>(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Object + Sync + Send>>>, mut rng: R, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
     
     // Cast ray from each pixel
     for x in min_x..max_x {
