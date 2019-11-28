@@ -18,7 +18,5 @@ pub trait Object {
      */
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32);
 
-    fn get_position(&self) -> &Vec3;
-
     fn get_material(&self) -> &Material;
 }

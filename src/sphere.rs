@@ -98,10 +98,6 @@ impl Object for Sphere {
         );
     }
 
-    fn get_position(&self) -> &Vec3 {
-        &self.position
-    }
-
     fn get_material(&self) -> &Material {
         &self.material
     }

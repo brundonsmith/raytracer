@@ -14,7 +14,6 @@ use crate::obj_parser::{parse,LineType};
 pub struct Face (pub usize, pub usize, pub usize);
 
 pub struct Mesh {
-    position: Vec3,
     material: Material,
 
     vertices: Vec<Vec3>,
@@ -26,11 +25,10 @@ pub struct Mesh {
 
 impl Mesh {
 
-    pub fn new(position: Vec3, material: Material, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
+    pub fn new(material: Material, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
         let bounding_sphere = get_bounding_sphere(&vertices);
 
         Self {
-            position,
             material,
             vertices,
             faces,
@@ -51,7 +49,11 @@ impl Mesh {
 
         for line in parse(&data) {
             match line {
-                LineType::Vertex(x, y, z) => vertices.push(Vec3 { x: x + position.x, y: y + position.y, z: z + position.z }),
+                LineType::Vertex(x, y, z) => vertices.push(Vec3 { 
+                    x: x * 0.5 + position.x, 
+                    y: y * 0.5 + position.y, 
+                    z: z * 0.5 + position.z }),
+                    // HACK: Temporary halving just for this mesh. Roll scale in with general transformation later.
                 LineType::Face(v0, v1, v2) => faces.push(Face(v0.0, v1.0, v2.0)),
                 _ => ()
             }
@@ -59,7 +61,7 @@ impl Mesh {
         
         println!("done");
         
-        return Mesh::new(position, material, vertices, faces, uv_coords);
+        return Mesh::new(material, vertices, faces, uv_coords);
     }
 }
 
@@ -104,20 +106,20 @@ impl Object for Mesh {
             let mut nearest_intersection: Option<Intersection> = None;
 
             for face in &self.faces {
-                let vert0 = &(&self.vertices[face.0] * 0.5) + &self.position;
-                let vert1 = &(&self.vertices[face.1] * 0.5) + &self.position;
-                let vert2 = &(&self.vertices[face.2] * 0.5) + &self.position;
+                let vert0 = &self.vertices[face.0];
+                let vert1 = &self.vertices[face.1];
+                let vert2 = &self.vertices[face.2];
                 let normal = triangle_normal(&vert0, &vert1, &vert2);
 
                 match plane_intersection(&vert0, &normal, ray) {
                     Some(intersection) => {
                         if intersection.distance > 0.0 && nearest_intersection.as_ref().map(|nearest| intersection.distance < nearest.distance).unwrap_or(true) {
-                            let edge0 = &vert1 - &vert0; 
-                            let edge1 = &vert2 - &vert1; 
-                            let edge2 = &vert0 - &vert2; 
-                            let c0 = &intersection.position - &vert0; 
-                            let c1 = &intersection.position - &vert1; 
-                            let c2 = &intersection.position - &vert2; 
+                            let edge0 = vert1 - vert0; 
+                            let edge1 = vert2 - vert1; 
+                            let edge2 = vert0 - vert2; 
+                            let c0 = &intersection.position - vert0; 
+                            let c1 = &intersection.position - vert1; 
+                            let c2 = &intersection.position - vert2; 
                             if  normal.dot(&edge0.cross(&c0)) > 0.0 && 
                                 normal.dot(&edge1.cross(&c1)) > 0.0 && 
                                 normal.dot(&edge2.cross(&c2)) > 0.0 {
@@ -137,10 +139,6 @@ impl Object for Mesh {
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
         // TODO
         (0.0, 0.0)
-    }
-
-    fn get_position(&self) -> &Vec3 {
-        &self.position
     }
 
     fn get_material(&self) -> &Material {
