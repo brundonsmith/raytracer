@@ -1,8 +1,7 @@
-- Normal maps
-- Fix plane UV mapping
 - Mesh UV mapping
+- Denoising trick (increase roughness on each bounce)
+- Proper object transforms, particularly rotation
+- Normal maps
 - Transparency
 - Atmospheric scattering
 - Get diffuse/specular interaction working properly
-- Denoising trick (increase roughness on each bounce)
-- Proper object transforms, particularly rotation

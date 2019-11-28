@@ -4,7 +4,7 @@ use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::object::Object;
 use crate::sphere::Sphere;
-use crate::mesh::{Mesh,Face};
+use crate::mesh::{Mesh};
 use crate::plane::Plane;
 use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
@@ -29,8 +29,8 @@ pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: Some(Box::new(TextureSolid { color: Color(0.9, 0.9, 0.9) })),
+            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
+            texture_specular: Some(Box::new(TextureCheckered::new())),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
@@ -72,7 +72,7 @@ pub fn construct_material_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
             texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\CobblestoneSpecular.jpg"))),
+            texture_specular: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/CobblestoneSpecular.jpg"))),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
         }
@@ -126,7 +126,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         uv_coords: vec![]
     }));*/
 
-    let obj = Mesh::from_obj("C:\\Users\\Brundon\\git\\raytracer\\test.obj", Vec3 { x: 0.0, y: -2.0, z: -5.0 }, Material {
+    let obj = Mesh::from_obj("/Users/brundolf/git/raytracer/test.obj", Vec3 { x: 0.0, y: -2.0, z: -5.0 }, Material {
         texture_albedo: Some(Box::new(TextureSolid::new())),
         texture_specular: None,
         texture_normal: None,
@@ -172,7 +172,7 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
+            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/texture.jpg"))),
             texture_specular: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg")))
@@ -235,7 +235,37 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
     return objs;
 }
 
-pub fn construct_image_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
+pub fn construct_plane_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
+    let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
+
+    objs.push(Box::new(Plane::new(
+        Vec3 { x: 0.0, y: 5.0, z: 0.0, },
+        Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission: Some(Box::new(TextureSolid::new())),
+        }
+    )));
+
+    objs.push(Box::new(Plane::new(
+        Vec3 { x: 0.0, y: -1.5, z: 0.0, },
+        Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Material {
+            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/grid.jpg"))),
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission: None,
+        }
+    )));
+
+    return objs;
+}
+
+pub fn construct_sphere_texture_test() -> Vec<Box<dyn Object + Sync + Send>> {
     let mut objs: Vec<Box<dyn Object + Sync + Send>> = Vec::new();
     
     objs.push(Box::new(Sphere::new(

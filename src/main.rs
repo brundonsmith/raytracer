@@ -40,7 +40,11 @@ mod cast;
 use crate::fidelity_consts::{RESOLUTION,MAX_DEPTH,CELLS};
 use crate::frame::Frame;
 use crate::utils::clamp;
-use crate::scenes::{construct_reflect_scene,construct_room_scene,construct_image_texture_test};
+use crate::scenes::{
+    construct_reflect_scene,
+    construct_room_scene,
+    construct_plane_texture_test,
+    construct_sphere_texture_test};
 use crate::cast::cast_ray;
 use crate::object::Object;
 
@@ -58,7 +62,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_room_scene();
+    let objs = construct_plane_texture_test();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);
