@@ -19,7 +19,7 @@ impl TextureCheckered {
             rows: 8,
             cols: 8,
             color_1: Color(1.0, 1.0, 1.0),
-            color_2: Color(0.5, 0.5, 0.5)
+            color_2: Color(0.0, 0.0, 0.0)
         }
     }
     pub fn from_colors(color_1: Color, color_2: Color) -> Self {

@@ -6,4 +6,3 @@
 - Get diffuse/specular interaction working properly
 - Denoising trick (increase roughness on each bounce)
 - Proper object transforms, particularly rotation
-- Cheaper RNG (or create rays that are already within range?)
