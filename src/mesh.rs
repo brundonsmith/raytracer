@@ -65,16 +65,34 @@ impl Mesh {
 }
 
 fn get_bounding_sphere(position: &Vec3, vertices: &Vec<Vec3>) -> Sphere {
-    let mut farthest_vertex_squared = 0.0;
+    let mut min = Vec3::new();
+    let mut max = Vec3::new();
 
     for v in vertices {
-        let len_squared = (v - position).len_squared();
-        if len_squared > farthest_vertex_squared {
-            farthest_vertex_squared = len_squared;
-        }
+        min.x = f32::min(min.x, v.x);
+        min.y = f32::min(min.y, v.y);
+        min.z = f32::min(min.z, v.z);
+
+        max.x = f32::max(max.x, v.x);
+        max.y = f32::max(max.y, v.y);
+        max.z = f32::max(max.z, v.z);
     }
 
-    return Sphere::new(position.clone(), farthest_vertex_squared.sqrt(), Material::new());
+    let center = Vec3 {
+        x: (min.x + max.x) / 2.0,
+        y: (min.y + max.y) / 2.0,
+        z: (min.z + max.z) / 2.0,
+    };
+
+    let radius =
+        f32::max(f32::abs(max.x - center.x),
+        f32::max(f32::abs(max.y - center.y),
+        f32::max(f32::abs(max.z - center.z),
+        f32::max(f32::abs(min.x - center.x),
+        f32::max(f32::abs(min.y - center.y),
+        f32::max(f32::abs(min.z - center.z), 0.0))))));
+
+    return Sphere::new(position + &center, radius, Material::new());
 }
 
 impl Object for Mesh {
