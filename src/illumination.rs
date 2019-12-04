@@ -15,6 +15,12 @@ impl Illumination {
             intensity: 0.0,
         }
     }
+    pub fn combined(a: &Illumination, b: &Illumination) -> Self {
+        Illumination {
+            color: a.color * b.color,
+            intensity: a.intensity + b.intensity
+        }
+    }
 }
 
 //pub fn integrate<'a,I: Iterator<Item = &'a Illumination>>(samples: I) -> Illumination {

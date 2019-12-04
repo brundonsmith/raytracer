@@ -30,7 +30,7 @@ pub fn construct_reflect_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
+            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/texture.jpg"))),
             texture_specular: Some(Box::new(TextureCheckered::new())),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid::new())),
