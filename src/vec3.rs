@@ -30,6 +30,14 @@ impl Vec3 {
         }
     }
 
+    pub fn angles(&self) -> (f32,f32) {
+        let normalized = self.normalized();
+        let beta = normalized.y.asin();
+        let alpha = (normalized.x / beta.cos()).acos();
+
+        return (alpha, beta);
+    }
+
     pub fn len(&self) -> f32 {
         self.len_squared().sqrt()
     }
