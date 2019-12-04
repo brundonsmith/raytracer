@@ -4,7 +4,7 @@ use crate::material::Material;
 use crate::vec3::Vec3;
 use crate::object::Object;
 use crate::sphere::Sphere;
-use crate::mesh::{Mesh};
+use crate::mesh::{Mesh,Face};
 use crate::plane::Plane;
 use crate::texture_solid::TextureSolid;
 use crate::texture_checkered::TextureCheckered;
@@ -127,9 +127,31 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         uv_coords: vec![]
     }));*/
 
+    objs.push(Box::new(Sphere::new(
+        Vec3 { x: 3.0, y: -3.0, z: -13.0 },
+        1.0,
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
+            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 1.0) }))
+        }
+    )));
+
+    objs.push(Box::new(Sphere::new(
+        Vec3 { x: -2.0, y: 0.0, z: -8.0 },
+        1.0,
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
+            texture_specular: Some(Box::new(TextureSolid::new())),
+            texture_normal: None,
+            texture_emission: None,
+        }
+    )));
+
     objs.push(Box::new(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/test.obj", 
-        &(&Matrix::translation(&Vec3 { x: 0.0, y: -2.0, z: -5.0 }) *
+        &(&Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -10.0 }) *
         &(&Matrix::rotation_y(std::f32::consts::PI) *
           &Matrix::scale(&Vec3::from_scalar(0.5)))),
         Material {
@@ -163,12 +185,33 @@ pub fn construct_room_scene() -> Vec<Box<dyn Object + Sync + Send>> {
         Vec3 { x: 0.0, y: -1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
+            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
             texture_specular: None,
             texture_normal: None,
             texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
         }
     )));
+
+    /*
+    objs.push(Box::new(Mesh::new(
+        Material {
+            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
+        },
+        vec![
+            Vec3 { x: 1.0,  y: 4.99, z: -11.0 },
+            Vec3 { x: 1.0,  y: 4.99, z: -13.0 },
+            Vec3 { x: -1.0, y: 4.99, z: -13.0 },
+            Vec3 { x: -1.0, y: 4.99, z: -11.0 },
+        ],
+        vec![
+            Face(0, 1, 2),
+            Face(2, 3, 0)
+        ],
+        vec![]
+    )));*/
     
 
     // floor
