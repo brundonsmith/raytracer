@@ -1,6 +1,7 @@
+- Get diffuse/specular interaction working properly
 - Mesh UV mapping
 - Denoising trick (increase roughness on each bounce)
 - Normal maps
 - Transparency
 - Atmospheric scattering
-- Get diffuse/specular interaction working properly
+- Illumination brightness from texture (instead of just color)
