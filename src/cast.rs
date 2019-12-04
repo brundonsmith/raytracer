@@ -1,4 +1,6 @@
 
+use std::f32::consts::PI;
+
 use rand::Rng;
 
 use crate::ray::Ray;
@@ -7,6 +9,10 @@ use crate::object::Object;
 use crate::illumination::{Illumination};
 use crate::color::Color;
 use crate::fidelity_consts::{SAMPLE_COUNT};
+use crate::vec3::Vec3;
+
+const TWO_PI: f32 = PI * 2.0;
+const PI_OVER_TWO: f32 = PI / 2.0;
 
 // misc
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
@@ -52,10 +58,15 @@ pub fn cast_ray<R: Rng>(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rn
 
 pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool, R: Rng>(intersection: &mut Intersection, predicate: F, rng: &mut R, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
-
+    
     let mut i = 0;
-    while i < SAMPLE_COUNT {        
+    while i < SAMPLE_COUNT {
         let ray = Ray::random_direction(intersection.position, rng);
+        /*
+        let ray = Ray {
+            origin: intersection.position,
+            direction: DIRECTIONS[rng.gen_range(0, PRECOMPUTED_SAMPLE_DIRECTION_COUNT)]
+        };*/
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area
         if predicate(intersection, &ray, range) {
@@ -63,6 +74,56 @@ pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool, R: Rng>(inte
             i += 1;
         }
     }
+    
+
+    /*
+    double a = random() * 2 * PI
+    double r = R * sqrt(random())
+
+    // If you need it in Cartesian coordinates
+    double x = r * cos(a)
+    double y = r * sin(a)
+    */
+    /*
+    for i in 0..SAMPLE_COUNT {
+        let angle = rng.gen_range(0.0, TWO_PI);
+        let radius = range * (rng.gen_range(0.0, 1.0) as f32).sqrt();
+    
+        let intersection_normal_angles = intersection.normal.angles();
+    
+        let alpha = intersection_normal_angles.0 + radius * angle.cos();
+        let beta = intersection_normal_angles.1 + radius * angle.sin();
+    
+        rays[i] = Ray {
+            origin: intersection.position.clone(),
+            direction: Vec3::from_angles(alpha, beta)
+        };
+    }*/
 
     return rays;
 }
+
+/*
+const PRECOMPUTED_SAMPLE_DIRECTION_COUNT: usize = 1024;
+
+lazy_static! {
+    static ref DIRECTIONS: [Vec3;PRECOMPUTED_SAMPLE_DIRECTION_COUNT] = generate_directions();
+}
+
+fn generate_directions() -> [Vec3;PRECOMPUTED_SAMPLE_DIRECTION_COUNT] {
+    let mut arr = [Vec3::new();PRECOMPUTED_SAMPLE_DIRECTION_COUNT];
+
+    let alpha_increments = (PRECOMPUTED_SAMPLE_DIRECTION_COUNT as f32 * 2.0 / 3.0) as usize;
+    let rows = (PRECOMPUTED_SAMPLE_DIRECTION_COUNT as f32 / 3.0) as usize;
+
+    for i in 0..PRECOMPUTED_SAMPLE_DIRECTION_COUNT {
+        let alpha_increment = i % beta_increments;
+        let beta_increment = i / beta_increments;
+
+        arr[i] = Vec3::from_angles(
+            (alpha_increment as f32 / alpha_increments as f32) * TWO_PI,
+            (beta_increment as f32 / beta_increments as f32) * PI);
+    }
+
+    return arr;
+}*/
