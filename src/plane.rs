@@ -45,10 +45,12 @@ impl Object for Plane {
         let plane_projection = self.projection(point);
 
         let proj_y = plane_projection.projected_on(&self.projected_bias);
-        let u = (&plane_projection - &proj_y).len() / 2.0;
+        let difference_vec_y = &plane_projection - &proj_y;
+        let u = difference_vec_y.x.signum() * difference_vec_y.len() / 2.0;
 
         let proj_x = plane_projection.projected_on(&self.rotated_projected_bias);
-        let v = (&plane_projection - &proj_x).len() / 2.0;
+        let difference_vec_x = &plane_projection - &proj_x;
+        let v = difference_vec_x.y.signum() * difference_vec_x.len() / 2.0;
 
         (u - u.floor(), v - v.floor())
     }
