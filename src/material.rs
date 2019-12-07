@@ -5,9 +5,10 @@ use rand::Rng;
 use crate::illumination::{Illumination,integrate};
 use crate::texture::Texture;
 use crate::color::Color;
+use crate::vec3::Vec3;
 use crate::intersection::Intersection;
 use crate::cast::{cast_ray,get_sample_rays};
-use crate::fidelity_consts::{SAMPLE_COUNT};
+use crate::fidelity_consts::{SAMPLE_COUNT,PREVIEW_MODE};
 use crate::ray::Ray;
 use crate::object::Object;
 
@@ -20,6 +21,8 @@ pub struct Material {
     pub texture_normal: Option<Box<dyn Texture + Sync + Send>>,
     pub texture_emission: Option<Box<dyn Texture + Sync + Send>>,
 }
+
+const PREVIEW_DIRECTION: Vec3 = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
 
 impl Material {
 
@@ -36,64 +39,73 @@ impl Material {
         match &self.texture_emission {
             Some(tex) => Illumination {
                 color: tex.color_at(uv),
-                intensity: 20.0
+                intensity: 10.0
             },
             None => {
-                let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|texture| {
-                    let surface_color = texture.color_at(uv);
-                    let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI / 2.0);
-
-                    let mut samples = [Illumination::new();SAMPLE_COUNT];
-                    for i in 0..SAMPLE_COUNT {
-                        samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
-                    }
-
-                    let illumination = integrate(&samples);
-                    
+                if PREVIEW_MODE {
+                    //println!("Preview");
+                    let base_color = self.texture_albedo.as_ref().map(|texture| texture.color_at(uv)).unwrap_or(Color(1.0, 1.0, 1.0));
+                    let adjustment = 1.0 - (intersection.normal.angle(&PREVIEW_DIRECTION) / PI);
                     Illumination {
-                        color: surface_color * illumination.color,
-                        intensity: illumination.intensity
+                        color: base_color * adjustment,
+                        intensity: 1.0
                     }
-                });
-
-                let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
-                    let specularity = texture.color_at(uv).0;
-                    
-                    if specularity > 0.99 {
-                        // if reflection is nearly perfect, just cast a single sample ray to avoid work
-                        return cast_ray(&Ray {
-                            origin: intersection.position,
-                            direction: intersection.reflected_direction().clone()
-                        }, objs, rng, depth - 1);
-                    } else {
-                        let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
+                } else {
+                    let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|texture| {
+                        let surface_color = texture.color_at(uv);
+                        let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI / 2.0);
 
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
                             samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
                         }
-                        
+
                         let illumination = integrate(&samples);
-
-                        return illumination;
-                    }
-                });
-
-                match diffuse_illumination {
-                    Some(diffuse) => {
-                        match specular_illumination {
-                            Some(specular) => Illumination::combined(&diffuse, &specular),
-                            None => diffuse
+                        
+                        Illumination {
+                            color: surface_color * illumination.color,
+                            intensity: illumination.intensity
                         }
-                    },
-                    None => {
-                        match specular_illumination {
-                            Some(specular) => specular,
-                            None => BACKGROUND_ILLUMINATION
+                    });
+
+                    let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
+                        let specularity = texture.color_at(uv).0;
+                        
+                        if specularity > 0.99 {
+                            // if reflection is nearly perfect, just cast a single sample ray to avoid work
+                            return cast_ray(&Ray {
+                                origin: intersection.position,
+                                direction: intersection.reflected_direction().clone()
+                            }, objs, rng, depth - 1);
+                        } else {
+                            let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
+
+                            let mut samples = [Illumination::new();SAMPLE_COUNT];
+                            for i in 0..SAMPLE_COUNT {
+                                samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                            }
+                            
+                            let illumination = integrate(&samples);
+
+                            return illumination;
+                        }
+                    });
+
+                    match diffuse_illumination {
+                        Some(diffuse) => {
+                            match specular_illumination {
+                                Some(specular) => Illumination::combined(&diffuse, &specular),
+                                None => diffuse
+                            }
+                        },
+                        None => {
+                            match specular_illumination {
+                                Some(specular) => specular,
+                                None => BACKGROUND_ILLUMINATION
+                            }
                         }
                     }
                 }
-
             }
         }
     }
