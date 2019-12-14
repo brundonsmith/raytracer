@@ -39,7 +39,7 @@ impl Material {
         match &self.texture_emission {
             Some(tex) => Illumination {
                 color: tex.color_at(uv),
-                intensity: 10.0
+                intensity: 1.0
             },
             None => {
                 if PREVIEW_MODE {
