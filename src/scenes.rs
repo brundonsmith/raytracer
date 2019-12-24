@@ -1,6 +1,4 @@
 
-use std::collections::HashMap;
-
 use crate::color::Color;
 use crate::material::Material;
 use crate::vec3::Vec3;
@@ -10,7 +8,6 @@ use crate::plane::Plane;
 use crate::texture::Texture;
 use crate::matrix::Matrix;
 use crate::utils::{ObjectVec};
-use crate::mtl_parser::load_and_parse;
 
 pub fn construct_reflect_scene() -> ObjectVec {
     let mut objs: ObjectVec = Vec::new();
@@ -89,8 +86,7 @@ pub fn construct_tree_scene() -> ObjectVec {
     objs.push(Box::new(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/tree.obj", 
         &(&Matrix::translation(&Vec3 { x: 0.0, y: 0.0, z: -3.0 }) *
-          &Matrix::rotation_y(std::f32::consts::PI / -4.0)),
-        load_and_parse("/Users/brundolf/git/raytracer/tree.mtl")
+          &Matrix::rotation_y(std::f32::consts::PI / -4.0))
     )));
 
     objs.push(Box::new(Plane::new(
@@ -175,21 +171,11 @@ pub fn construct_room_scene() -> ObjectVec {
         }
     )));
 
-
-    let mut mats = HashMap::new();
-    mats.insert(String::from("Default"), Material {
-        texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
-        texture_specular: None,
-        texture_normal: None,
-        texture_emission: None,
-    });
-
     objs.push(Box::new(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/test.obj", 
         &(&Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -10.0 }) *
         &(&Matrix::rotation_y(std::f32::consts::PI) *
-          &Matrix::scale(&Vec3::from_scalar(0.5)))),
-        mats
+          &Matrix::scale(&Vec3::from_scalar(0.5))))
     )));
 
     /*

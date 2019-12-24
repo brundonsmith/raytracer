@@ -10,11 +10,27 @@ use crate::material::Material;
 use crate::utils::{plane_intersection,ObjectVec};
 use crate::sphere::Sphere;
 use crate::obj_parser::{parse,LineType};
+use crate::mtl_parser::{load_and_parse};
 use crate::matrix::Matrix;
 use crate::illumination::Illumination;
+use crate::texture::Texture;
+use crate::color::Color;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Face (pub usize, pub usize, pub usize);
+const DEFAULT_MATERIAL: Material = Material {
+    texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
+    texture_specular: None,
+    texture_normal: None,
+    texture_emission: None
+};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Face {
+    pub v0: usize,
+    pub v1: usize,
+    pub v2: usize,
+
+    pub mat: Option<String>,
+}
 
 pub struct Mesh {
     materials: HashMap<String,Material>,
@@ -22,14 +38,13 @@ pub struct Mesh {
     vertices: Vec<Vec3>,
     faces: Vec<Face>,
     uv_coords: Vec<(f32,f32)>,
-    face_materials: HashMap<usize,String>,
 
     bounding_sphere: Sphere,
 }
 
 impl Mesh {
 
-    pub fn new(materials: HashMap<String,Material>, vertices: Vec<Vec3>, faces: Vec<Face>, face_materials: HashMap<usize,String>, uv_coords: Vec<(f32,f32)>) -> Self {
+    pub fn new(materials: HashMap<String,Material>, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
         let bounding_sphere = get_bounding_sphere(&vertices);
 
         Self {
@@ -37,40 +52,53 @@ impl Mesh {
             vertices,
             faces,
             uv_coords,
-            face_materials,
 
             bounding_sphere
         }
     }
 
-    pub fn from_obj(path: &str, transform: &Matrix, materials: HashMap<String,Material>) -> Self {
+    pub fn from_obj(path: &str, transform: &Matrix) -> Self {
         let data = fs::read_to_string(path).expect("Failed to open mesh file");
 
         println!("Loading obj...");
 
         let mut vertices = Vec::new();
         let mut faces = Vec::new();
-        let mut face_materials = HashMap::new();
         let uv_coords = Vec::new();
+
+        let mut materials: HashMap<String,Material> = HashMap::new();
 
         let mut current_mat: Option<String> = None;
         for line in parse(&data) {
             match line {
                 LineType::Vertex(x, y, z) => vertices.push(Vec3 { x, y, z }.transformed(transform)),
                 LineType::Face(v0, v1, v2) => {
-                    current_mat.as_ref().map(|name| 
-                        face_materials.insert(faces.len(), name.clone())
-                    );
-                    faces.push(Face(v0.0, v1.0, v2.0));
+                    faces.push(Face {
+                        v0: v0.0, 
+                        v1: v1.0,
+                        v2: v2.0,
+
+                        mat: current_mat.as_ref().map(|m| String::from(m))
+                    });
                 },
-                LineType::UseMaterial(name) => current_mat = Some(name),
+                LineType::MTLib(file) => {
+                    let segments: Vec<&str> = path.split("/").collect();
+                    let mut local_dir = String::new();
+                    for i in 0..segments.len() - 1 {
+                        local_dir += segments[i];
+                        local_dir += "/";
+                    }
+
+                    materials = load_and_parse(&(local_dir + &file));
+                },
+                LineType::UseMaterial(name) => current_mat = Some(name.clone()),
                 _ => ()
             }
         }
 
         println!("done");
         
-        return Mesh::new(materials, vertices, faces, face_materials, uv_coords);
+        return Mesh::new(materials, vertices, faces, uv_coords);
     }
 
     fn inner_intersection(&self, ray: &Ray) -> Option<(Intersection,usize)> {
@@ -80,11 +108,11 @@ impl Mesh {
             let mut nearest_intersection: Option<(Intersection,usize)> = None;
 
             for face_index in 0..self.faces.len() {
-                let face = self.faces[face_index];
+                let face = &self.faces[face_index];
 
-                let vert0 = &self.vertices[face.0];
-                let vert1 = &self.vertices[face.1];
-                let vert2 = &self.vertices[face.2];
+                let vert0 = &self.vertices[face.v0];
+                let vert1 = &self.vertices[face.v1];
+                let vert2 = &self.vertices[face.v2];
                 let normal = triangle_normal(&vert0, &vert1, &vert2);
 
                 match plane_intersection(&vert0, &normal, ray) {
@@ -158,9 +186,8 @@ impl Object for Mesh {
     fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         let mut intersection = self.inner_intersection(ray).unwrap();
 
-        let material_name = self.face_materials.get(&intersection.1);
-        let material = material_name.map(|name| self.materials.get(name).unwrap())
-            .unwrap_or(self.materials.iter().next().map(|entry| entry.1).unwrap());
+        let material_name = self.faces[intersection.1].mat.as_ref();
+        let material = material_name.map(|name| self.materials.get(name).unwrap()).unwrap_or(&DEFAULT_MATERIAL);
 
         let uv = self.texture_coordinate(&intersection.0.position);
 
