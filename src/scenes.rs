@@ -34,10 +34,10 @@ pub fn construct_reflect_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/texture.jpg"))),
-            texture_specular: Some(Box::new(TextureCheckered::new())),
+            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
+            texture_specular: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/specular.jpeg"))),
             texture_normal: None,
-            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+            texture_emission: None,
         }
     )));
 
@@ -90,7 +90,7 @@ pub fn construct_tree_scene() -> ObjectVec {
     let mut objs: ObjectVec = Vec::new();
 
     objs.push(Box::new(Mesh::from_obj(
-        "/Users/brundolf/git/raytracer/tree.obj", 
+        "/Users/brundolf/git/raytracer/floor.obj", 
         &(&Matrix::translation(&Vec3 { x: 0.0, y: 0.0, z: -3.0 }) *
           &Matrix::rotation_y(std::f32::consts::PI / -4.0)),
         load_and_parse("/Users/brundolf/git/raytracer/tree.mtl")

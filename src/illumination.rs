@@ -1,6 +1,7 @@
 
 use crate::color::Color;
 use crate::fidelity_consts::{SAMPLE_COUNT};
+use crate::utils::lerp;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Illumination {
@@ -15,12 +16,17 @@ impl Illumination {
             intensity: 0.0,
         }
     }
-    pub fn combined(a: &Illumination, b: &Illumination) -> Self {
+    pub fn combined(a: &Illumination, b: &Illumination, t: f32) -> Self {
         let total_intensity = a.intensity + b.intensity;
 
         Illumination {
-            color: (a.color * (a.intensity / total_intensity)) + (b.color * (b.intensity / total_intensity)),
-            intensity: a.intensity + b.intensity
+            //(a.color * (a.intensity / total_intensity)) + (b.color * (b.intensity / total_intensity))
+            color: Color(
+                lerp(a.color.0, b.color.0, t),
+                lerp(a.color.1, b.color.1, t),
+                lerp(a.color.2, b.color.2, t),
+            ),
+            intensity: total_intensity
         }
     }
 }

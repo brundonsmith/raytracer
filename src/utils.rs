@@ -20,6 +20,10 @@ pub fn avg(a: f32, b: f32) -> f32 {
     (a + b) / 2.0
 }
 
+pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    t * (b - a).abs() + f32::min(a, b)
+}
+
 pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<Intersection> {
     let numerator = (position - &ray.origin).dot(&normal);
     let denominator = ray.direction.dot(&normal);

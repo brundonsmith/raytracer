@@ -65,7 +65,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_tree_scene();
+    let objs = construct_reflect_scene();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);
@@ -104,7 +104,7 @@ fn ray_trace<'a>() -> Frame {
                         (x_cell + 1) * cell_size, 
                         (y_cell + 1) * cell_size
                     );
-
+                    
                     let mut cells_done = cells_done_mutex_arc_clone.lock().unwrap();
                     **cells_done = (**cells_done) + 1;
 

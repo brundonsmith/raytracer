@@ -183,13 +183,17 @@ impl std::ops::Mul<f32> for &Vec3 {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use crate::vec3::Vec3;
 
-// tests
-#[test]
-fn test_ops() {
-    let vec1 = Vec3 { x: 1.0, y: 3.0, z: -5.0 };
-    let vec2 = Vec3 { x: 4.0, y: -2.0, z: -1.0 };
+    // tests
+    #[test]
+    fn test_ops() {
+        let vec1 = Vec3 { x: 1.0, y: 3.0, z: -5.0 };
+        let vec2 = Vec3 { x: 4.0, y: -2.0, z: -1.0 };
 
-    assert_eq!(&vec1 + &vec2, Vec3{ x: 5.0, y: 1.0, z: -6.0 });
-    assert_eq!(&vec1 * &vec2, 3.0);
+        assert_eq!(&vec1 + &vec2, Vec3{ x: 5.0, y: 1.0, z: -6.0 });
+        assert_eq!(&vec1 * &vec2, 3.0);
+    }
 }

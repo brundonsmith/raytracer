@@ -38,11 +38,10 @@ impl Material {
         match &self.texture_emission {
             Some(tex) => Illumination {
                 color: tex.color_at(uv),
-                intensity: 1.0
+                intensity: 20.0
             },
             None => {
                 if PREVIEW_MODE {
-                    //println!("Preview");
                     let base_color = self.texture_albedo.as_ref().map(|texture| texture.color_at(uv)).unwrap_or(Color(1.0, 1.0, 1.0));
                     let adjustment = 1.0 - (intersection.normal.angle(&PREVIEW_DIRECTION) / PI);
                     Illumination {
@@ -67,15 +66,15 @@ impl Material {
                         }
                     });
 
-                    let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
+                    let specular_illumination: Option<(Illumination,f32)> = self.texture_specular.as_ref().map(|texture| {
                         let specularity = texture.color_at(uv).0;
-                        
+
                         if specularity > 0.99 {
                             // if reflection is nearly perfect, just cast a single sample ray to avoid work
-                            return cast_ray(&Ray {
+                            return (cast_ray(&Ray {
                                 origin: intersection.position,
                                 direction: intersection.reflected_direction().clone()
-                            }, objs, rng, depth - 1);
+                            }, objs, rng, depth - 1), specularity);
                         } else {
                             let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI_OVER_TWO);
 
@@ -86,20 +85,20 @@ impl Material {
                             
                             let illumination = integrate(&samples);
 
-                            return illumination;
+                            return (illumination,specularity);
                         }
                     });
 
                     match diffuse_illumination {
                         Some(diffuse) => {
                             match specular_illumination {
-                                Some(specular) => Illumination::combined(&diffuse, &specular),
+                                Some(specular) => Illumination::combined(&diffuse, &specular.0, specular.1),
                                 None => diffuse
                             }
                         },
                         None => {
                             match specular_illumination {
-                                Some(specular) => specular,
+                                Some(specular) => specular.0,
                                 None => BACKGROUND_ILLUMINATION
                             }
                         }
