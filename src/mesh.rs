@@ -112,6 +112,16 @@ impl Mesh {
                 let vert0 = &self.vertices[face.v0];
                 let vert1 = &self.vertices[face.v1];
                 let vert2 = &self.vertices[face.v2];
+
+                let distance_squared = nearest_intersection.as_ref().map(|i| i.0.distance * i.0.distance);
+
+                if distance_squared.is_some() &&
+                   ((vert0 - &ray.origin).len_squared() > distance_squared.unwrap() ||
+                    (vert0 - &ray.origin).len_squared() > distance_squared.unwrap() ||
+                    (vert0 - &ray.origin).len_squared() > distance_squared.unwrap()) {
+                    continue;
+                }
+
                 let normal = triangle_normal(&vert0, &vert1, &vert2);
 
                 match plane_intersection(&vert0, &normal, ray) {
