@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::material::Material;
 use crate::color::Color;
-use crate::texture_solid::TextureSolid;
+use crate::texture::Texture;
 
 pub fn load_and_parse(path: &str) -> HashMap<String,Material> {
     let data = fs::read_to_string(path).expect("Failed to open materials file");
@@ -44,11 +44,11 @@ pub fn parse(obj: &str) -> HashMap<String,Material> {
                 ));
             },
             "Kd" => {
-                mat.as_mut().unwrap().1.texture_albedo = Some(Box::new(TextureSolid { color: Color(
+                mat.as_mut().unwrap().1.texture_albedo = Some(Texture::Solid(Color(
                     segments[1].parse().ok().unwrap(),
                     segments[2].parse().ok().unwrap(),
                     segments[3].parse().ok().unwrap()
-                )}));
+                )));
             },
             
             /* specular tint

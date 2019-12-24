@@ -8,9 +8,7 @@ use crate::object::Object;
 use crate::sphere::Sphere;
 use crate::mesh::{Mesh,Face};
 use crate::plane::Plane;
-use crate::texture_solid::TextureSolid;
-use crate::texture_checkered::TextureCheckered;
-use crate::texture_image::TextureImage;
+use crate::texture::Texture;
 use crate::matrix::Matrix;
 use crate::utils::{ObjectVec};
 use crate::mtl_parser::load_and_parse;
@@ -22,10 +20,10 @@ pub fn construct_reflect_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 0.0, z: -12.0 },
         1.0,
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
+            texture_specular: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new()))
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0)))
         }
     )));
 
@@ -34,8 +32,8 @@ pub fn construct_reflect_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
-            texture_specular: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/specular.jpeg"))),
+            texture_albedo: Some(Texture::Solid(Color(1.0,0.0,0.0))),
+            texture_specular: Some(Texture::from_image("/Users/brundolf/git/raytracer/specular.jpeg")),
             texture_normal: None,
             texture_emission: None,
         }
@@ -51,10 +49,10 @@ pub fn construct_material_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 0.0, z: -12.0 },
         1.0,
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
+            texture_specular: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) }))
+            texture_emission: Some(Texture::Solid(Color(1.0,0.0,0.0)))
         }
     )));
 
@@ -67,7 +65,7 @@ pub fn construct_material_scene() -> ObjectVec {
             texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 1.0, 1.0) })),
+            texture_emission: Some(Texture::Solid(Color(1.0, 1.0, 1.0))),
         }
     )));
 
@@ -76,10 +74,10 @@ pub fn construct_material_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/CobblestoneSpecular.jpg"))),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
+            texture_specular: Some(Texture::from_image("/Users/brundolf/git/raytracer/CobblestoneSpecular.jpg")),
             texture_normal: None,
-            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+            texture_emission: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -90,7 +88,7 @@ pub fn construct_tree_scene() -> ObjectVec {
     let mut objs: ObjectVec = Vec::new();
 
     objs.push(Box::new(Mesh::from_obj(
-        "/Users/brundolf/git/raytracer/floor.obj", 
+        "/Users/brundolf/git/raytracer/tree.obj", 
         &(&Matrix::translation(&Vec3 { x: 0.0, y: 0.0, z: -3.0 }) *
           &Matrix::rotation_y(std::f32::consts::PI / -4.0)),
         load_and_parse("/Users/brundolf/git/raytracer/tree.mtl")
@@ -104,7 +102,7 @@ pub fn construct_tree_scene() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.52, 0.17) })),
+            texture_emission: Some(Texture::Solid(Color(1.0, 0.52, 0.17))),
         }
     )));
 
@@ -120,7 +118,7 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: -1.5, y: 0.0, z: -9.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureCheckered::new())),
+            texture_albedo: Some(Texture::Procedural(&checker)),
             texture_specular: None,
             texture_emission: None,
         }
@@ -133,7 +131,7 @@ pub fn construct_room_scene() -> ObjectVec {
         Material {
             texture_albedo: None,//Some(Box::new(TextureCheckered::from_colors(Color(1.0,1.0,1.0), Color(0.0,0.0,0.0)))),
             texture_specular: Some(Box::new(TextureCheckered::from_colors(Color(0.6,0.6,0.6), Color(0.01,0.01,0.01)))),
-            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+            texture_emission: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));*/
 
@@ -141,7 +139,7 @@ pub fn construct_room_scene() -> ObjectVec {
     objs.push(Box::new(Mesh {
         position: Vec3 { x: 0.0, y: 0.0, z: -5.0 },
         material: Material {
-            texture_albedo: Some(Box::new(TextureCheckered::new())),
+            texture_albedo: Some(Texture::Procedural(&checker)),
             texture_specular: None,
             texture_emission: None,
         },
@@ -160,10 +158,10 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 3.0, y: -3.0, z: -13.0 },
         1.0,
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
+            texture_specular: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 1.0) }))
+            texture_emission: Some(Texture::Solid(Color(0.0, 1.0, 1.0)))
         }
     )));
 
@@ -171,8 +169,8 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: -2.0, y: 0.0, z: -8.0 },
         1.0,
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
-            texture_specular: Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
+            texture_specular: Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
             texture_emission: None,
         }
@@ -181,7 +179,7 @@ pub fn construct_room_scene() -> ObjectVec {
 
     let mut mats = HashMap::new();
     mats.insert(String::from("Default"), Material {
-        texture_albedo: Some(Box::new(TextureSolid::new())),
+        texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         texture_specular: None,
         texture_normal: None,
         texture_emission: None,
@@ -205,7 +203,7 @@ pub fn construct_room_scene() -> ObjectVec {
             },
             1.0,
             Material {
-                texture_albedo: Some(Box::new(TextureCheckered::new())),
+                texture_albedo: Some(Texture::Procedural(&checker)),
                 texture_specular: None,
                 texture_emission: None,
             }
@@ -219,10 +217,10 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: -1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
+            texture_emission: Some(Texture::Solid(Color(1.0, 0.95, 0.8))),
         }
     )));
 
@@ -254,7 +252,7 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/texture.jpg"))),
+            texture_albedo: Some(Texture::from_image("/Users/brundolf/git/raytracer/texture.jpg")),
             texture_specular: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg")))
@@ -268,10 +266,10 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 1.0, y: 0.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
+            texture_albedo: Some(Texture::Solid(Color(1.0,0.0,0.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.0, 0.0) })),
+            texture_emission: None,//Some(Texture::Solid(Color(1.0,0.0,0.0))),
         }
     )));
 
@@ -281,8 +279,8 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Texture::Solid(Color(0.0, 1.0, 0.0))),
+            texture_specular: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
             texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 1.0, 0.0) })),
         }
@@ -294,10 +292,10 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 0.0, z: 1.0 },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,//Some(Box::new(TextureSolid::new())),
+            texture_emission: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -307,10 +305,10 @@ pub fn construct_room_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
+            texture_albedo: Some(Texture::Solid(Color(0.0,0.0,1.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,//Some(Box::new(TextureSolid { color: Color(0.0, 0.0, 1.0) })),
+            texture_emission: None,//Some(Texture::Solid(Color(0.0,0.0,1.0))),
         }
     )));
     
@@ -328,7 +326,7 @@ pub fn construct_plane_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -337,7 +335,7 @@ pub fn construct_plane_texture_test() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("/Users/brundolf/git/raytracer/grid.jpg"))),
+            texture_albedo: Some(Texture::from_image("/Users/brundolf/git/raytracer/grid.jpg")),
             texture_specular: None,
             texture_normal: None,
             texture_emission: None,
@@ -354,8 +352,8 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
         Vec3 { x: 0.0, y: 0.0, z: -5.0 },
         1.0,
         Material {
-            texture_albedo: Some(Box::new(TextureImage::new("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg"))),
-            texture_specular: None,//Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Texture::from_image("C:\\Users\\Brundon\\git\\raytracer\\texture.jpg")),
+            texture_specular: None,//Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
             texture_emission: None,
         }
@@ -371,7 +369,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
     
@@ -385,7 +383,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -399,7 +397,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -412,7 +410,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -425,7 +423,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
 
@@ -438,7 +436,7 @@ pub fn construct_sphere_texture_test() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid::new())),
+            texture_emission: Some(Texture::Solid(Color(1.0,1.0,1.0))),
         }
     )));
     
@@ -454,7 +452,7 @@ pub fn construct_wallpaper_scene() -> ObjectVec {
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Material {
-            texture_albedo: Some(Box::new(TextureSolid::new())),
+            texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_specular: None,
             texture_normal: None,
             texture_emission: None,
@@ -474,7 +472,7 @@ pub fn construct_wallpaper_scene() -> ObjectVec {
                     texture_albedo: None,
                     texture_specular: None,
                     texture_normal: None,
-                    texture_emission: Some(Box::new(TextureSolid { color: Color(0.0, z_inc as f32 / 4.0, x_inc as f32 / 8.0) }))
+                    texture_emission: Some(Texture::Solid(Color(0.0, z_inc as f32 / 4.0, x_inc as f32 / 8.0)))
                 }
             )));
         }

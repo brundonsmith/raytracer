@@ -15,10 +15,10 @@ use crate::utils::{ObjectVec,PI_OVER_TWO};
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
 
 pub struct Material {
-    pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
-    pub texture_specular: Option<Box<dyn Texture + Sync + Send>>,
-    pub texture_normal: Option<Box<dyn Texture + Sync + Send>>,
-    pub texture_emission: Option<Box<dyn Texture + Sync + Send>>,
+    pub texture_albedo: Option<Texture>,
+    pub texture_specular: Option<Texture>,
+    pub texture_normal: Option<Texture>,
+    pub texture_emission: Option<Texture>,
 }
 
 const PREVIEW_DIRECTION: Vec3 = Vec3 { x: 1.0, y: 1.0, z: 1.0 };

@@ -27,9 +27,6 @@ mod plane;
 mod ray;
 mod scenes;
 mod sphere;
-mod texture_checkered;
-mod texture_solid;
-mod texture_image;
 mod texture;
 mod utils;
 mod vec3;
@@ -65,7 +62,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_reflect_scene();
+    let objs = construct_tree_scene();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);
