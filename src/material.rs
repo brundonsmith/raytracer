@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use rand::Rng;
+use rand::rngs::SmallRng;
 
 use crate::illumination::{Illumination,integrate};
 use crate::texture::Texture;
@@ -10,10 +10,10 @@ use crate::intersection::Intersection;
 use crate::cast::{cast_ray,get_sample_rays};
 use crate::fidelity_consts::{SAMPLE_COUNT,PREVIEW_MODE};
 use crate::ray::Ray;
+use crate::utils::ObjectVec;
 use crate::object::Object;
 
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
-
 
 pub struct Material {
     pub texture_albedo: Option<Box<dyn Texture + Sync + Send>>,
@@ -35,7 +35,7 @@ impl Material {
         }
     }
 
-    pub fn shade<R: Rng>(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut R, depth: u8) -> Illumination {
+    pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         match &self.texture_emission {
             Some(tex) => Illumination {
                 color: tex.color_at(uv),

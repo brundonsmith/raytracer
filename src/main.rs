@@ -21,6 +21,7 @@ mod illumination;
 mod intersection;
 mod material;
 mod matrix;
+mod mtl_parser;
 mod object;
 mod plane;
 mod ray;
@@ -44,9 +45,12 @@ use crate::scenes::{
     construct_reflect_scene,
     construct_room_scene,
     construct_plane_texture_test,
-    construct_sphere_texture_test};
+    construct_sphere_texture_test,
+    construct_wallpaper_scene,
+    construct_tree_scene};
 use crate::cast::cast_ray;
 use crate::object::Object;
+use crate::utils::{ObjectVec};
 
 
 fn main() {
@@ -62,7 +66,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_reflect_scene();
+    let objs = construct_tree_scene();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);
@@ -70,7 +74,7 @@ fn ray_trace<'a>() -> Frame {
 
     // Create thread wrappers
     let frame_mutex_arc: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut frame));
-    let objs_arc: Arc<&Vec<Box<dyn Object + Sync + Send>>> = Arc::new(&objs);
+    let objs_arc: Arc<&ObjectVec> = Arc::new(&objs);
     let cells_done_mutex_arc = Arc::new(Mutex::new(&mut cells_done));
 
     // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
@@ -121,7 +125,7 @@ fn ray_trace<'a>() -> Frame {
 /**
  * Raytrace one square sub-portion of the image (exists to facilitate threading)
  */
-fn ray_trace_cell<R: Rng>(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<Box<dyn Object + Sync + Send>>>, mut rng: R, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
+fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&ObjectVec>, mut rng: SmallRng, min_x: usize, min_y: usize, max_x: usize, max_y: usize) {
     
     // Cast ray from each pixel
     for x in min_x..max_x {

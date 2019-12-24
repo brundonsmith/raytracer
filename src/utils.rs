@@ -1,10 +1,14 @@
-
+use std::f32::consts::PI;
 use std::ops::{Add,Div};
-use std::iter::Sum;
 
+use crate::object::Object;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::intersection::Intersection;
+
+const TWO_PI: f32 = PI * 2.0;
+const PI_OVER_TWO: f32 = PI / 2.0;
+
 
 pub fn clamp<T: PartialOrd>(val: T, min: T, max: T) -> T {
     if val < min { min }
@@ -51,3 +55,5 @@ pub fn avg_all<'a,T: Add<Output=T> + Div<usize, Output=T>,I: Iterator<Item = T>>
 
     return sum.map(|s| s / count);
 }
+
+pub type ObjectVec = Vec<Box<dyn Object + Sync + Send>>;

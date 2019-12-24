@@ -1,18 +1,12 @@
 
-use std::f32::consts::PI;
-
-use rand::Rng;
+use rand::rngs::SmallRng;
 
 use crate::ray::Ray;
 use crate::intersection::Intersection;
-use crate::object::Object;
 use crate::illumination::{Illumination};
 use crate::color::Color;
 use crate::fidelity_consts::{SAMPLE_COUNT};
-use crate::vec3::Vec3;
-
-const TWO_PI: f32 = PI * 2.0;
-const PI_OVER_TWO: f32 = PI / 2.0;
+use crate::utils::{ObjectVec};
 
 // misc
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
@@ -22,7 +16,7 @@ const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0
 /**
  * Cast a single ray, from a pixel or from a bounce
  */
-pub fn cast_ray<R: Rng>(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rng: &mut R, depth: u8) -> Illumination {
+pub fn cast_ray(ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
     if depth <= 0 { return BACKGROUND_ILLUMINATION; }
 
     let mut nearest_intersection: Option<Intersection> = None;
@@ -46,9 +40,7 @@ pub fn cast_ray<R: Rng>(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rn
     let nearest_illumination: Illumination = nearest_object_index
         .map(|object_index| {
             let nearest_object = &objs[object_index];
-            let mut intersection = nearest_intersection.unwrap(); // if we have nearest_object_index, we have nearest_intersection
-            let uv = nearest_object.texture_coordinate(&intersection.position);
-            nearest_object.get_material().shade(&mut intersection, uv, objs, rng, depth)
+            nearest_object.shade(ray, objs, rng, depth)
         })
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
@@ -56,7 +48,7 @@ pub fn cast_ray<R: Rng>(ray: &Ray, objs: &Vec<Box<dyn Object + Sync + Send>>, rn
 }
 
 
-pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool, R: Rng>(intersection: &mut Intersection, predicate: F, rng: &mut R, range: f32) -> [Ray;SAMPLE_COUNT] {
+pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut SmallRng, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
     
     let mut i = 0;

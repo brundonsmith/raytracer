@@ -1,4 +1,4 @@
-
+use rand::rngs::SmallRng;
 use std::f32::consts::PI;
 
 use crate::vec3::Vec3;
@@ -6,6 +6,8 @@ use crate::ray::Ray;
 use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
+use crate::utils::ObjectVec;
+use crate::illumination::Illumination;
 
 pub struct Sphere {
     position: Vec3,
@@ -98,8 +100,17 @@ impl Object for Sphere {
         );
     }
 
-    fn get_material(&self) -> &Material {
-        &self.material
+    fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
+        let mut intersection = self.intersection(ray).unwrap();
+        let uv = self.texture_coordinate(&intersection.position);
+
+        self.material.shade(
+            &mut intersection,
+            uv,
+            objs,
+            rng,
+            depth
+        )
     }
 }
 

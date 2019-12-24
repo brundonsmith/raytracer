@@ -1,5 +1,6 @@
 
 use rand::Rng;
+use rand::rngs::SmallRng;
 use std::f32::consts::PI;
 
 const PI_OVER_TWO: f32 = PI / 2.0;
@@ -21,7 +22,7 @@ impl Ray {
         }
     }
 
-    pub fn random_direction<R: Rng>(origin: Vec3, rng: &mut R) -> Self {
+    pub fn random_direction(origin: Vec3, rng: &mut SmallRng) -> Self {
         Self {
             origin,
             direction: Vec3::from_angles(

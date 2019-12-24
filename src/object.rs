@@ -1,8 +1,12 @@
 
+use rand::rngs::SmallRng;
+
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use crate::material::Material;
 use crate::intersection::Intersection;
+use crate::illumination::Illumination;
+use crate::utils::{ObjectVec};
 
 pub trait Object {
 
@@ -18,5 +22,6 @@ pub trait Object {
      */
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32);
 
-    fn get_material(&self) -> &Material;
+
+    fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination;
 }
