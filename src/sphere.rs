@@ -8,6 +8,7 @@ use crate::intersection::Intersection;
 use crate::material::Material;
 use crate::utils::ObjectVec;
 use crate::illumination::Illumination;
+use crate::utils::TWO_PI;
 
 pub struct Sphere {
     position: Vec3,
@@ -86,11 +87,11 @@ impl Object for Sphere {
         let longitude = (relative_point.z / relative_point.x).atan();
         let continuous_longitude = longitude 
             + if relative_point.x < 0.0 { PI } else { 0.0 }
-            + if relative_point.x >= 0.0 && relative_point.z < 0.0 { 2.0 * PI } else { 0.0 };
+            + if relative_point.x >= 0.0 && relative_point.z < 0.0 { TWO_PI } else { 0.0 };
 
         let latitude = (relative_point.y / self.radius).acos();
 
-        let u = continuous_longitude / (2.0 * PI);
+        let u = continuous_longitude / TWO_PI;
         let v = 1.0 - latitude / PI;
 
         // Some extra tiling (4x4)

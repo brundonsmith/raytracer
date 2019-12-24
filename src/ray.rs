@@ -1,11 +1,9 @@
 
 use rand::Rng;
 use rand::rngs::SmallRng;
-use std::f32::consts::PI;
-
-const PI_OVER_TWO: f32 = PI / 2.0;
 
 use crate::vec3::Vec3;
+use crate::utils::{TWO_PI,PI_OVER_TWO};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {
@@ -26,7 +24,7 @@ impl Ray {
         Self {
             origin,
             direction: Vec3::from_angles(
-                rng.gen_range(0.0, PI * 2.0),
+                rng.gen_range(0.0, TWO_PI),
                 rng.gen_range(-1.0 * PI_OVER_TWO, PI_OVER_TWO),
             )
         }

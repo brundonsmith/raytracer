@@ -49,7 +49,6 @@ use crate::scenes::{
     construct_wallpaper_scene,
     construct_tree_scene};
 use crate::cast::cast_ray;
-use crate::object::Object;
 use crate::utils::{ObjectVec};
 
 

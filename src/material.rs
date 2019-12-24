@@ -10,8 +10,7 @@ use crate::intersection::Intersection;
 use crate::cast::{cast_ray,get_sample_rays};
 use crate::fidelity_consts::{SAMPLE_COUNT,PREVIEW_MODE};
 use crate::ray::Ray;
-use crate::utils::ObjectVec;
-use crate::object::Object;
+use crate::utils::{ObjectVec,PI_OVER_TWO};
 
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
 
@@ -53,7 +52,7 @@ impl Material {
                 } else {
                     let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|texture| {
                         let surface_color = texture.color_at(uv);
-                        let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI / 2.0);
+                        let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI_OVER_TWO);
 
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
@@ -78,7 +77,7 @@ impl Material {
                                 direction: intersection.reflected_direction().clone()
                             }, objs, rng, depth - 1);
                         } else {
-                            let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI / 2.0);
+                            let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI_OVER_TWO);
 
                             let mut samples = [Illumination::new();SAMPLE_COUNT];
                             for i in 0..SAMPLE_COUNT {

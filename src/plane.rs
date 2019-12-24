@@ -1,13 +1,12 @@
 
 use rand::rngs::SmallRng;
-use std::f32::consts::PI;
 
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
-use crate::utils::{plane_intersection,ObjectVec};
+use crate::utils::{plane_intersection,ObjectVec,PI_OVER_TWO};
 use crate::illumination::Illumination;
 
 pub struct Plane {
@@ -28,7 +27,7 @@ impl Plane {
             normal,
             material,
             projected_bias,
-            rotated_projected_bias: projected_bias.rotated_around(&normal, PI / -2.0).normalized()
+            rotated_projected_bias: projected_bias.rotated_around(&normal, -1.0 * PI_OVER_TWO).normalized()
         }
     }
 

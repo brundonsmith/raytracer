@@ -6,8 +6,8 @@ use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::intersection::Intersection;
 
-const TWO_PI: f32 = PI * 2.0;
-const PI_OVER_TWO: f32 = PI / 2.0;
+pub const TWO_PI: f32 = PI * 2.0;
+pub const PI_OVER_TWO: f32 = PI / 2.0;
 
 
 pub fn clamp<T: PartialOrd>(val: T, min: T, max: T) -> T {

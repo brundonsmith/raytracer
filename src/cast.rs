@@ -69,7 +69,7 @@ pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection
     
 
     /*
-    double a = random() * 2 * PI
+    double a = random() * TWO_PI
     double r = R * sqrt(random())
 
     // If you need it in Cartesian coordinates

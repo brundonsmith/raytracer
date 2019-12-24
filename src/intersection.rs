@@ -1,7 +1,7 @@
-use std::f32::consts::PI;
 
 use crate::utils::clamp;
 use crate::vec3::Vec3;
+use crate::utils::{PI_OVER_TWO};
 
 pub struct Intersection {
     pub distance: f32,
@@ -34,7 +34,7 @@ impl Intersection {
      * The "directness" of the incident, between 0 and 1
      */
     pub fn incident_amount(&self) -> f32 {
-        clamp(self.incident_angle() / (PI / 2.0), 0.0, 1.0)
+        clamp(self.incident_angle() / PI_OVER_TWO, 0.0, 1.0)
     }
 
     pub fn reflected_direction(&mut self) -> &Vec3 {
