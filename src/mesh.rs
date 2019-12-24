@@ -29,11 +29,11 @@ pub struct Face {
     pub v1: usize,
     pub v2: usize,
 
-    pub mat: Option<String>,
+    pub mat: Option<usize>,
 }
 
 pub struct Mesh {
-    materials: HashMap<String,Material>,
+    materials: Vec<Material>,
 
     vertices: Vec<Vec3>,
     faces: Vec<Face>,
@@ -44,19 +44,6 @@ pub struct Mesh {
 
 impl Mesh {
 
-    pub fn new(materials: HashMap<String,Material>, vertices: Vec<Vec3>, faces: Vec<Face>, uv_coords: Vec<(f32,f32)>) -> Self {
-        let bounding_sphere = get_bounding_sphere(&vertices);
-
-        Self {
-            materials,
-            vertices,
-            faces,
-            uv_coords,
-
-            bounding_sphere
-        }
-    }
-
     pub fn from_obj(path: &str, transform: &Matrix) -> Self {
         let data = fs::read_to_string(path).expect("Failed to open mesh file");
 
@@ -66,9 +53,10 @@ impl Mesh {
         let mut faces = Vec::new();
         let uv_coords = Vec::new();
 
-        let mut materials: HashMap<String,Material> = HashMap::new();
+        let mut materials: Vec<Material> = Vec::new();
+        let mut material_names: HashMap<String,usize> = HashMap::new();
 
-        let mut current_mat: Option<String> = None;
+        let mut current_mat: Option<usize> = None;
         for line in parse(&data) {
             match line {
                 LineType::Vertex(x, y, z) => vertices.push(Vec3 { x, y, z }.transformed(transform)),
@@ -78,7 +66,7 @@ impl Mesh {
                         v1: v1.0,
                         v2: v2.0,
 
-                        mat: current_mat.as_ref().map(|m| String::from(m))
+                        mat: current_mat
                     });
                 },
                 LineType::MTLib(file) => {
@@ -89,16 +77,27 @@ impl Mesh {
                         local_dir += "/";
                     }
 
-                    materials = load_and_parse(&(local_dir + &file));
+                    for (name, mat) in load_and_parse(&(local_dir + &file)) {
+                        material_names.insert(name, materials.len());
+                        materials.push(mat);
+                    }
                 },
-                LineType::UseMaterial(name) => current_mat = Some(name.clone()),
+                LineType::UseMaterial(name) => current_mat = material_names.get(&name).map(|x| *x),
                 _ => ()
             }
         }
 
+        let bounding_sphere = get_bounding_sphere(&vertices);
+
         println!("done");
         
-        return Mesh::new(materials, vertices, faces, uv_coords);
+        return Self {
+            materials,
+            vertices,
+            faces,
+            uv_coords,
+            bounding_sphere,
+        }
     }
 
     fn inner_intersection(&self, ray: &Ray) -> Option<(Intersection,usize)> {
@@ -186,8 +185,8 @@ impl Object for Mesh {
     fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         let mut intersection = self.inner_intersection(ray).unwrap();
 
-        let material_name = self.faces[intersection.1].mat.as_ref();
-        let material = material_name.map(|name| self.materials.get(name).unwrap()).unwrap_or(&DEFAULT_MATERIAL);
+        let face = &self.faces[intersection.1];
+        let material = face.mat.map(|i| self.materials.get(i).unwrap_or(&DEFAULT_MATERIAL)).unwrap_or(&DEFAULT_MATERIAL);
 
         let uv = self.texture_coordinate(&intersection.0.position);
 

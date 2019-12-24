@@ -209,28 +209,6 @@ pub fn construct_room_scene() -> ObjectVec {
         }
     )));
 
-    /*
-    objs.push(Box::new(Mesh::new(
-        Material {
-            texture_albedo: None,//Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
-            texture_specular: None,
-            texture_normal: None,
-            texture_emission: Some(Box::new(TextureSolid { color: Color(1.0, 0.95, 0.8) })),
-        },
-        vec![
-            Vec3 { x: 1.0,  y: 4.99, z: -11.0 },
-            Vec3 { x: 1.0,  y: 4.99, z: -13.0 },
-            Vec3 { x: -1.0, y: 4.99, z: -13.0 },
-            Vec3 { x: -1.0, y: 4.99, z: -11.0 },
-        ],
-        vec![
-            Face(0, 1, 2),
-            Face(2, 3, 0)
-        ],
-        vec![]
-    )));*/
-    
-
     // floor
     objs.push(Box::new(Plane::new(
         Vec3 { x: 0.0, y: -5.0, z: 0.0, },
