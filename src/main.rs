@@ -30,7 +30,6 @@ mod sphere;
 mod texture;
 mod utils;
 mod vec3;
-mod timing;
 mod mesh;
 mod obj_parser;
 mod cast;

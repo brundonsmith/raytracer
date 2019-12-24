@@ -12,7 +12,6 @@ use crate::sphere::Sphere;
 use crate::obj_parser::{parse,LineType};
 use crate::matrix::Matrix;
 use crate::illumination::Illumination;
-use crate::color::Color;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Face (pub usize, pub usize, pub usize);

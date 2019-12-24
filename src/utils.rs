@@ -43,21 +43,4 @@ pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<I
     };
 }
 
-pub fn avg_all<'a,T: Add<Output=T> + Div<usize, Output=T>,I: Iterator<Item = T>>(elements: I) -> Option<T> {
-    let mut count = 0;
-    let mut sum: Option<T> = None;
-
-    for el in elements {
-        count += 1;
-
-        if sum.is_none() {
-            sum = Some(el);
-        } else {
-            sum = Some(sum.unwrap() + el);
-        }
-    }
-
-    return sum.map(|s| s / count);
-}
-
 pub type ObjectVec = Vec<Box<dyn Object + Sync + Send>>;

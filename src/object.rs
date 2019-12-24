@@ -3,7 +3,6 @@ use rand::rngs::SmallRng;
 
 use crate::ray::Ray;
 use crate::vec3::Vec3;
-use crate::material::Material;
 use crate::intersection::Intersection;
 use crate::illumination::Illumination;
 use crate::utils::{ObjectVec};
