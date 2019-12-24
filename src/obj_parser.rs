@@ -30,8 +30,8 @@ pub fn parse_line(line: &str) -> LineType {
                 parse_face_vertex(segments[1]),
                 parse_face_vertex(segments[2]),
                 parse_face_vertex(segments[3])),
-        "usemtl" => LineType::UseMaterial(
-                String::from(segments[1])),
+        "mtllib" => LineType::MTLib(String::from(segments[1])),
+        "usemtl" => LineType::UseMaterial(String::from(segments[1])),
 
         _ => LineType::Unknown
     }
@@ -54,6 +54,7 @@ pub enum LineType {
     VertexNormal(f32, f32, f32),
     VertexTexture(f32, f32),
     Face(FaceVertex, FaceVertex, FaceVertex),
+    MTLib(String),
     UseMaterial(String),
 
     Unknown,
