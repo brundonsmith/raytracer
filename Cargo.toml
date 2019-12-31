@@ -4,14 +4,28 @@ version = "0.1.0"
 authors = ["Brandon Smith <mail@brandonsmith.ninja>"]
 edition = "2018"
 
+[lib]
+name = "raytracer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "raytracer"
+path = "src/bin/main.rs"
+
+[profile.dev]
+opt-level = 3
+
 [dependencies]
 image = "0.22.3"
 crossbeam = "0.7.2"
-lazy_static = "1.4.0"
 
 [dependencies.rand]
 version = "0.7.2"
 features = ["small_rng"]
 
-[profile.dev]
-opt-level = 3
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "main"
+harness = false
