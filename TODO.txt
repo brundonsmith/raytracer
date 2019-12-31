@@ -4,5 +4,4 @@
 - Normal maps
 - Transparency
 - Atmospheric scattering
-- Illumination brightness from texture (instead of just color)
 - Bloom lighting
