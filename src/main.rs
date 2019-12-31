@@ -7,8 +7,6 @@ use rand::rngs::SmallRng;
 extern crate image;
 use image::{ImageBuffer, Rgb};
 extern crate crossbeam;
-#[macro_use]
-extern crate lazy_static;
 
 use std::sync::{Arc, Mutex};
 use std::io::Write;
