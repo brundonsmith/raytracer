@@ -39,7 +39,8 @@ pub fn parse(obj: &str) -> HashMap<String,Material> {
                         texture_albedo: None,
                         texture_specular: None,
                         texture_normal: None,
-                        texture_emission: None,
+                        texture_emission_color: None,
+                        texture_emission_intensity: None,
                     }
                 ));
             },

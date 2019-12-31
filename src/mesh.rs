@@ -20,7 +20,8 @@ const DEFAULT_MATERIAL: Material = Material {
     texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
     texture_specular: None,
     texture_normal: None,
-    texture_emission: None
+    texture_emission_color: None,
+    texture_emission_intensity: None,
 };
 
 #[derive(Debug, Clone, PartialEq)]

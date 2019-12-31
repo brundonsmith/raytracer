@@ -6,6 +6,10 @@ pub struct Color(pub f32, pub f32, pub f32);
 
 impl Color {
 
+    pub fn gray(value: f32) -> Self {
+        Self(value, value, value)
+    }
+
     pub fn to_u8(&self) -> [u8;3] {
         [ 
             clamp(self.0 * 255.0, 0.0, 255.0) as u8, 

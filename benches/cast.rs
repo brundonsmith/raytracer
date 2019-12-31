@@ -73,7 +73,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Texture::Solid(Color(0.0, 1.0, 1.0)))
+            texture_emission_color: Some(Texture::Solid(Color(0.0, 1.0, 1.0))),
+            texture_emission_intensity: Some(Texture::Solid(Color::gray(1.0))),
         }
     )));
 
@@ -84,7 +85,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: None,
             texture_specular: Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
 
@@ -105,7 +107,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: Some(Texture::Solid(Color(1.0, 0.95, 0.8))),
+            texture_emission_color: Some(Texture::Solid(Color(1.0, 0.95, 0.8))),
+            texture_emission_intensity: Some(Texture::Solid(Color::gray(1.0))),
         }
     )));
 
@@ -118,7 +121,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: Some(Texture::from_image("/Users/brundolf/git/raytracer/texture.jpg")),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
 
@@ -132,7 +136,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: Some(Texture::Solid(Color(1.0,0.0,0.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
 
@@ -145,7 +150,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: Some(Texture::Solid(Color(0.0, 1.0, 0.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
 
@@ -158,7 +164,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: Some(Texture::Solid(Color(1.0,1.0,1.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
 
@@ -171,7 +178,8 @@ fn construct_room_scene() -> ObjectVec {
             texture_albedo: Some(Texture::Solid(Color(0.0,0.0,1.0))),
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     )));
     

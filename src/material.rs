@@ -18,7 +18,8 @@ pub struct Material {
     pub texture_albedo: Option<Texture>,
     pub texture_specular: Option<Texture>,
     pub texture_normal: Option<Texture>,
-    pub texture_emission: Option<Texture>,
+    pub texture_emission_color: Option<Texture>,
+    pub texture_emission_intensity: Option<Texture>,
 }
 
 const PREVIEW_DIRECTION: Vec3 = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
@@ -30,15 +31,17 @@ impl Material {
             texture_albedo: None,
             texture_specular: None,
             texture_normal: None,
-            texture_emission: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
         }
     }
 
     pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
-        match &self.texture_emission {
+        match &self.texture_emission_intensity {
             Some(tex) => Illumination {
-                color: tex.color_at(uv),
-                intensity: 20.0
+                color: self.texture_emission_color.as_ref().map(|col| col.color_at(uv))
+                        .unwrap_or(Color(1.0, 1.0, 1.0)),
+                intensity: tex.color_at(uv).0
             },
             None => {
                 if PREVIEW_MODE {
