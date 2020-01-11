@@ -8,6 +8,7 @@ use crate::intersection::Intersection;
 use crate::material::Material;
 use crate::utils::{plane_intersection,ObjectVec,PI_OVER_TWO};
 use crate::illumination::Illumination;
+use crate::matrix::Matrix;
 
 pub struct Plane {
     pub position: Vec3,
@@ -36,10 +37,28 @@ impl Plane {
     }
 }
 
+const FORWARD: Vec3 = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
+
 impl Object for Plane {
 
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         plane_intersection(&self.position, &self.normal, ray)
+            .map(|mut intersection| {
+
+                self.material.texture_normal.as_ref().map(|texture_normal| {
+                    let normal_color = texture_normal.color_at(self.texture_coordinate(&intersection.position));
+                    let normal_vec = Vec3 {
+                        x: -1.0 * (normal_color.0 * 2.0 - 1.0),
+                        y: normal_color.1 * 2.0 - 1.0,
+                        z: (normal_color.2 * 2.0 - 1.0) * -1.0,
+                    };
+                    let transformation = Matrix::from_to_rotation(&FORWARD, &normal_vec);
+
+                    intersection.normal = intersection.normal.transformed(&transformation);
+                });
+                
+                intersection
+            })
     }
 
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {

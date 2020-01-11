@@ -95,13 +95,14 @@ impl Material {
                     match diffuse_illumination {
                         Some(diffuse) => {
                             match specular_illumination {
-                                Some(specular) => Illumination::combined(&diffuse, &specular.0, specular.1),
+                                Some((illumination, specularity)) => 
+                                    Illumination::combined(&diffuse, &illumination, specularity),
                                 None => diffuse
                             }
                         },
                         None => {
                             match specular_illumination {
-                                Some(specular) => specular.0,
+                                Some((illumination, _specularity)) => illumination,
                                 None => BACKGROUND_ILLUMINATION
                             }
                         }

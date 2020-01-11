@@ -9,11 +9,17 @@ use crate::color::Color;
 use crate::texture::Texture;
 
 pub fn load_and_parse(path: &str) -> HashMap<String,Material> {
-    let data = fs::read_to_string(path).expect("Failed to open materials file");
+    let data = fs::read_to_string(path);
 
     println!("Loading mtl...");
 
-    let mats = parse(&data);
+    let mats = match data {
+        Ok(contents) => parse(&contents),
+        Err(_) => {
+            println!("WARNING: Failed to open materials file \"{}\"", path);
+            HashMap::new()
+        }
+    };
     
     println!("done");
     

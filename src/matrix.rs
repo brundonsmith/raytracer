@@ -66,6 +66,21 @@ impl Matrix {
         ])
     }
 
+    pub fn from_to_rotation(from: &Vec3, to: &Vec3) -> Self {
+        let mut xaxis = from.cross(to);
+        xaxis.normalize();
+
+        let mut yaxis = to.cross(&xaxis);
+        yaxis.normalize();
+
+        Self([
+            xaxis.x,     xaxis.y,     xaxis.z,     0.0,
+            yaxis.x,     yaxis.y,     yaxis.z,     0.0,
+            to.x,        to.y,        to.z,        0.0,
+            0.0,         0.0,         0.0,         1.0
+        ])
+    }
+
     // core ops
     fn index_for(&self, row: usize, col: usize) -> usize {
         row * SIZE + col
@@ -159,6 +174,14 @@ impl std::ops::Mul for &Matrix {
         return result;
     }
 }
+impl std::ops::Mul for Matrix {
+    type Output = Matrix;
+
+    fn mul(self, other: Self) -> Self::Output {
+        &self * &other
+    }
+}
+
 impl std::ops::Mul<f32> for &Matrix {
     type Output = Matrix;
     

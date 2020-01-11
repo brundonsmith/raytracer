@@ -93,9 +93,10 @@ fn construct_room_scene() -> ObjectVec {
     // mesh
     objs.push(Box::new(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/test.obj", 
-        &(&Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -10.0 }) *
-        &(&Matrix::rotation_y(std::f32::consts::PI) *
-          &Matrix::scale(&Vec3::from_scalar(0.5))))
+        &(Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -10.0 })
+        * Matrix::rotation_y(std::f32::consts::PI)
+        * Matrix::scale(&Vec3::from_scalar(0.5))),
+        None
     )));
 
     // ceiling

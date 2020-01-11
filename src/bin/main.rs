@@ -21,6 +21,7 @@ use raytracer::scenes::{
     construct_plane_texture_test,
     construct_sphere_texture_test,
     construct_wallpaper_scene,
+    construct_wallpaper_scene_2,
     construct_tree_scene};
 use raytracer::cast::cast_ray;
 use raytracer::utils::{ObjectVec};
@@ -39,7 +40,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_room_scene();
+    let objs = construct_reflect_scene();
 
     // Create frame
     let mut frame = Frame::new(RESOLUTION,RESOLUTION);

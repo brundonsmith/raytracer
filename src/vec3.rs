@@ -25,7 +25,7 @@ impl Vec3 {
     pub fn from_angles(alpha: f32, beta: f32) -> Self {
         Self {
             x: alpha.cos() * beta.cos(),
-            y: beta.sin(),
+            y: beta.signum() * beta.sin(),
             z: alpha.sin() * beta.cos(),
         }
     }

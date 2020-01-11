@@ -35,6 +35,7 @@ pub struct Face {
 
 pub struct Mesh {
     materials: Vec<Material>,
+    default_material: Material,
 
     vertices: Vec<Vec3>,
     faces: Vec<Face>,
@@ -45,7 +46,7 @@ pub struct Mesh {
 
 impl Mesh {
 
-    pub fn from_obj(path: &str, transform: &Matrix) -> Self {
+    pub fn from_obj(path: &str, transform: &Matrix, default_material: Option<Material>) -> Self {
         let data = fs::read_to_string(path).expect("Failed to open mesh file");
 
         println!("Loading obj...");
@@ -94,6 +95,7 @@ impl Mesh {
         
         return Self {
             materials,
+            default_material: default_material.unwrap_or(DEFAULT_MATERIAL),
             vertices,
             faces,
             uv_coords,
@@ -197,7 +199,7 @@ impl Object for Mesh {
         let mut intersection = self.inner_intersection(ray).unwrap();
 
         let face = &self.faces[intersection.1];
-        let material = face.mat.map(|i| self.materials.get(i).unwrap_or(&DEFAULT_MATERIAL)).unwrap_or(&DEFAULT_MATERIAL);
+        let material = face.mat.map(|i| self.materials.get(i).unwrap_or(&self.default_material)).unwrap_or(&self.default_material);
 
         let uv = self.texture_coordinate(&intersection.0.position);
 
