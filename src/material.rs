@@ -1,13 +1,14 @@
 use std::f32::consts::PI;
 
 use rand::rngs::SmallRng;
+//use flamer::flame;
 
 use crate::illumination::{Illumination,integrate};
 use crate::texture::Texture;
 use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::intersection::Intersection;
-use crate::cast::{cast_ray,get_sample_rays};
+use crate::cast::{cast_ray};
 use crate::fidelity_consts::{SAMPLE_COUNT,PREVIEW_MODE};
 use crate::ray::Ray;
 use crate::utils::{ObjectVec,PI_OVER_TWO};
@@ -36,6 +37,7 @@ impl Material {
         }
     }
 
+//    #[flame("Material")]
     pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         match &self.texture_emission_intensity {
             Some(tex) => Illumination {
@@ -119,4 +121,21 @@ fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range
 
 fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
     sample_ray.direction.angle(&intersection.reflected_direction()) < range
+}
+
+fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut SmallRng, range: f32) -> [Ray;SAMPLE_COUNT] {
+    let mut rays = [Ray::new();SAMPLE_COUNT];
+    
+    let mut i = 0;
+    while i < SAMPLE_COUNT {
+        let ray = Ray::random_direction(intersection.position, rng);
+
+        // HACK: Figure out a way to *generate* rays that are already within our desired area
+        if predicate(intersection, &ray, range) {
+            rays[i] = ray;
+            i += 1;
+        }
+    }
+
+    return rays;
 }

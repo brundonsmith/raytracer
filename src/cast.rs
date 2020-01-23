@@ -1,11 +1,11 @@
 
 use rand::rngs::SmallRng;
+//use flamer::flame;
 
 use crate::ray::Ray;
 use crate::intersection::Intersection;
 use crate::illumination::{Illumination};
 use crate::color::Color;
-use crate::fidelity_consts::{SAMPLE_COUNT};
 use crate::utils::{ObjectVec};
 
 // misc
@@ -16,6 +16,7 @@ const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0
 /**
  * Cast a single ray, from a pixel or from a bounce
  */
+//#[flame]
 pub fn cast_ray(ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
     if depth <= 0 { return BACKGROUND_ILLUMINATION; }
 
@@ -45,54 +46,6 @@ pub fn cast_ray(ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> I
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
     return nearest_illumination;
-}
-
-
-pub fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut SmallRng, range: f32) -> [Ray;SAMPLE_COUNT] {
-    let mut rays = [Ray::new();SAMPLE_COUNT];
-    
-    let mut i = 0;
-    while i < SAMPLE_COUNT {
-        let ray = Ray::random_direction(intersection.position, rng);
-        /*
-        let ray = Ray {
-            origin: intersection.position,
-            direction: DIRECTIONS[rng.gen_range(0, PRECOMPUTED_SAMPLE_DIRECTION_COUNT)]
-        };*/
-
-        // HACK: Figure out a way to *generate* rays that are already within our desired area
-        if predicate(intersection, &ray, range) {
-            rays[i] = ray;
-            i += 1;
-        }
-    }
-    
-
-    /*
-    double a = random() * TWO_PI
-    double r = R * sqrt(random())
-
-    // If you need it in Cartesian coordinates
-    double x = r * cos(a)
-    double y = r * sin(a)
-    */
-    /*
-    for i in 0..SAMPLE_COUNT {
-        let angle = rng.gen_range(0.0, TWO_PI);
-        let radius = range * (rng.gen_range(0.0, 1.0) as f32).sqrt();
-    
-        let intersection_normal_angles = intersection.normal.angles();
-    
-        let alpha = intersection_normal_angles.0 + radius * angle.cos();
-        let beta = intersection_normal_angles.1 + radius * angle.sin();
-    
-        rays[i] = Ray {
-            origin: intersection.position.clone(),
-            direction: Vec3::from_angles(alpha, beta)
-        };
-    }*/
-
-    return rays;
 }
 
 /*
