@@ -1,14 +1,14 @@
 
 use rand::rngs::SmallRng;
+//use flamer::flame;
 
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::object::Object;
 use crate::intersection::Intersection;
 use crate::material::Material;
-use crate::utils::{plane_intersection,ObjectVec,PI_OVER_TWO};
+use crate::utils::{plane_intersection,ObjectVec,PI_OVER_TWO,adjusted_for_normal,color_to_normal};
 use crate::illumination::Illumination;
-use crate::matrix::Matrix;
 
 pub struct Plane {
     pub position: Vec3,
@@ -37,30 +37,23 @@ impl Plane {
     }
 }
 
-const FORWARD: Vec3 = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
-
 impl Object for Plane {
 
+//    #[flame("Plane")]
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         plane_intersection(&self.position, &self.normal, ray)
             .map(|mut intersection| {
-
+                
                 self.material.texture_normal.as_ref().map(|texture_normal| {
                     let normal_color = texture_normal.color_at(self.texture_coordinate(&intersection.position));
-                    let normal_vec = Vec3 {
-                        x: -1.0 * (normal_color.0 * 2.0 - 1.0),
-                        y: normal_color.1 * 2.0 - 1.0,
-                        z: (normal_color.2 * 2.0 - 1.0) * -1.0,
-                    };
-                    let transformation = Matrix::from_to_rotation(&FORWARD, &normal_vec);
-
-                    intersection.normal = intersection.normal.transformed(&transformation);
+                    intersection.normal = adjusted_for_normal(&intersection.normal, &color_to_normal(&normal_color));
                 });
                 
                 intersection
             })
     }
 
+//    #[flame("Plane")]
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
         let plane_projection = self.projection(point);
 
@@ -75,6 +68,7 @@ impl Object for Plane {
         (u - u.floor(), v - v.floor())
     }
 
+//    #[flame("Plane")]
     fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         let mut intersection = self.intersection(ray).unwrap();
         let uv = self.texture_coordinate(&intersection.position);

@@ -1,6 +1,7 @@
 
 use rand::Rng;
 use rand::rngs::SmallRng;
+//use flamer::flame;
 
 use crate::vec3::Vec3;
 use crate::utils::{TWO_PI,PI_OVER_TWO};
@@ -20,6 +21,7 @@ impl Ray {
         }
     }
 
+//    #[flame("Ray")]
     pub fn random_direction(origin: Vec3, rng: &mut SmallRng) -> Self {
         Self {
             origin,

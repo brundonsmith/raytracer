@@ -1,4 +1,5 @@
 use rand::rngs::SmallRng;
+//use flamer::flame;
 use std::f32::consts::PI;
 
 use crate::vec3::Vec3;
@@ -8,7 +9,7 @@ use crate::intersection::Intersection;
 use crate::material::Material;
 use crate::utils::ObjectVec;
 use crate::illumination::Illumination;
-use crate::utils::TWO_PI;
+use crate::utils::{TWO_PI,color_to_normal,adjusted_for_normal};
 
 pub struct Sphere {
     position: Vec3,
@@ -45,6 +46,7 @@ impl Sphere {
 
 impl Object for Sphere {
 
+//    #[flame("Sphere")]
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         
         // analytic solution
@@ -68,6 +70,14 @@ impl Object for Sphere {
                 let position = &ray.origin + &(&ray.direction * distance);
                 let mut normal = &position - &self.position;
                 normal.normalize();
+                normal = match self.material.texture_normal.as_ref() {
+                    Some(texture_normal) => {
+                        let normal_color = texture_normal.color_at(self.texture_coordinate(&position));
+                        adjusted_for_normal(&normal, &color_to_normal(&normal_color))
+                    },
+                    None => normal
+                };
+
                 let direction = ray.direction;
 
                 return Some(Intersection::new(
@@ -81,6 +91,7 @@ impl Object for Sphere {
         };
     }
 
+//    #[flame("Sphere")]
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
         let relative_point = point - &self.position;
 
@@ -101,6 +112,7 @@ impl Object for Sphere {
         );
     }
 
+//    #[flame("Sphere")]
     fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
         let mut intersection = self.intersection(ray).unwrap();
         let uv = self.texture_coordinate(&intersection.position);
