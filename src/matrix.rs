@@ -67,18 +67,20 @@ impl Matrix {
     }
 
     pub fn from_to_rotation(from: &Vec3, to: &Vec3) -> Self {
-        let mut xaxis = from.cross(to);
-        xaxis.normalize();
+        let mut w = from.cross(&to);
+        w.normalize();
 
-        let mut yaxis = to.cross(&xaxis);
-        yaxis.normalize();
+        let k = Self([
+            0.0,       -1.0 * w.z,  w.y,        0.0,
+            w.z,        0.0,        -1.0 * w.x, 0.0,
+            -1.0 * w.y, w.x,        0.0,        0.0,
+            0.0,        0.0,        0.0,        1.0
+        ]);
 
-        Self([
-            xaxis.x,     xaxis.y,     xaxis.z,     0.0,
-            yaxis.x,     yaxis.y,     yaxis.z,     0.0,
-            to.x,        to.y,        to.z,        0.0,
-            0.0,         0.0,         0.0,         1.0
-        ])
+        let theta = from.angle(&to);
+
+
+        return &(&IDENTITY + &(&k * theta.sin())) + &(&(&k * &k) * (1.0 - theta.cos()));
     }
 
     // core ops
@@ -227,4 +229,16 @@ fn test_mul() {
         236.0, 104.0, 172.0, 128.0,
         271.0, 149.0, 268.0, 169.0
     ]));
+}
+
+#[test]
+fn test_from_to() {
+    // NOTE: This will fail because of floating point comparison, but it should be 
+    // clear from the output whether or not it did what it was supposed to
+    let from = Vec3 { x: 0.2, y: 0.1, z: 0.3 }.normalized();
+    let to = Vec3 { x: 0.5, y: -0.1, z: 0.4 }.normalized();
+
+    let rotation = Matrix::from_to_rotation(&from, &to);
+
+    assert_eq!(&to, &from.transformed(&rotation));
 }
