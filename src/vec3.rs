@@ -25,7 +25,7 @@ impl Vec3 {
     pub fn from_angles(alpha: f32, beta: f32) -> Self {
         Self {
             x: alpha.cos() * beta.cos(),
-            y: beta.signum() * beta.sin(),
+            y: beta.sin(),
             z: alpha.sin() * beta.cos(),
         }
     }
@@ -59,7 +59,7 @@ impl Vec3 {
         return result;
     }
 
-    pub fn transformed(&mut self, matrix: &Matrix) -> Self {
+    pub fn transformed(&self, matrix: &Matrix) -> Self {
         Vec3 {
             x:  matrix.get(0, 0) * self.x +
                 matrix.get(0, 1) * self.y +
