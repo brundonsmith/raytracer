@@ -1,4 +1,3 @@
-- Convert Object from trait to enum (be sure to keep mesh data on heap)
 - Work out remaining weirdness with normal maps (has to do with object orientation)
 - Get diffuse/specular interaction working properly
 - Mesh UV mapping
