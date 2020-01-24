@@ -11,7 +11,9 @@ use crate::intersection::Intersection;
 use crate::cast::{cast_ray};
 use crate::fidelity_consts::{SAMPLE_COUNT,PREVIEW_MODE};
 use crate::ray::Ray;
-use crate::utils::{ObjectVec,PI_OVER_TWO};
+use crate::utils::{PI_OVER_TWO};
+use crate::object::{ObjectEnum};
+
 
 const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0.0, 0.0), intensity: 0.0 };
 
@@ -38,7 +40,7 @@ impl Material {
     }
 
 //    #[flame("Material")]
-    pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
+    pub fn shade(&self, intersection: &mut Intersection, uv: (f32,f32), objs: &Vec<ObjectEnum>, rng: &mut SmallRng, bounces_remaining: u8) -> Illumination {
         match &self.texture_emission_intensity {
             Some(tex) => Illumination {
                 color: self.texture_emission_color.as_ref().map(|col| col.color_at(uv))
@@ -46,7 +48,9 @@ impl Material {
                 intensity: tex.color_at(uv).0
             },
             None => {
-                if PREVIEW_MODE {
+                if bounces_remaining == 0 {
+                    BACKGROUND_ILLUMINATION
+                } else if PREVIEW_MODE {
                     let base_color = self.texture_albedo.as_ref().map(|texture| texture.color_at(uv)).unwrap_or(Color(1.0, 1.0, 1.0));
                     let adjustment = 1.0 - (intersection.normal.angle(&PREVIEW_DIRECTION) / PI);
                     Illumination {
@@ -60,7 +64,7 @@ impl Material {
 
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
-                            samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                            samples[i] = cast_ray(&sample_rays[i], objs, rng, bounces_remaining - 1);
                         }
 
                         let illumination = integrate(&samples);
@@ -79,13 +83,13 @@ impl Material {
                             return (cast_ray(&Ray {
                                 origin: intersection.position,
                                 direction: intersection.reflected_direction().clone()
-                            }, objs, rng, depth - 1), specularity);
+                            }, objs, rng, bounces_remaining - 1), specularity);
                         } else {
                             let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI_OVER_TWO);
 
                             let mut samples = [Illumination::new();SAMPLE_COUNT];
                             for i in 0..SAMPLE_COUNT {
-                                samples[i] = cast_ray(&sample_rays[i], objs, rng, depth - 1);
+                                samples[i] = cast_ray(&sample_rays[i], objs, rng, bounces_remaining - 1);
                             }
                             
                             let illumination = integrate(&samples);

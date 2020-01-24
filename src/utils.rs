@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::object::Object;
+use crate::object::{ObjectEnum};
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::intersection::Intersection;
@@ -43,9 +43,6 @@ pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<I
         return None;
     };
 }
-
-pub type ObjectVec = Vec<Box<dyn Object + Sync + Send>>;
-
 
 const FORWARD: Vec3 = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
 

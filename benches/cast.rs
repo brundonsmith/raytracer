@@ -15,7 +15,7 @@ use raytracer::mesh::{Mesh};
 use raytracer::plane::Plane;
 use raytracer::texture::Texture;
 use raytracer::matrix::Matrix;
-use raytracer::utils::{ObjectVec};
+use raytracer::object::{ObjectEnum};
 
 const TEST_RAY_1: Ray = Ray {
     origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
@@ -62,11 +62,11 @@ pub fn cast_ray_3(c: &mut Criterion) {
 }
 
 
-fn construct_room_scene() -> ObjectVec {
-    let mut objs: ObjectVec = Vec::new();
+fn construct_room_scene() -> Vec<ObjectEnum> {
+    let mut objs: Vec<ObjectEnum> = Vec::new();
 
     // spheres
-    objs.push(Box::new(Sphere::new(
+    objs.push(ObjectEnum::Sphere(Sphere::new(
         Vec3 { x: 3.0, y: -3.0, z: -13.0 },
         1.0,
         Material {
@@ -78,7 +78,7 @@ fn construct_room_scene() -> ObjectVec {
         }
     )));
 
-    objs.push(Box::new(Sphere::new(
+    objs.push(ObjectEnum::Sphere(Sphere::new(
         Vec3 { x: -2.0, y: 0.0, z: -8.0 },
         1.0,
         Material {
@@ -91,7 +91,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // mesh
-    objs.push(Box::new(Mesh::from_obj(
+    objs.push(ObjectEnum::Mesh(Mesh::from_obj(
         "/Users/brundolf/git/raytracer/test.obj", 
         &(Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -10.0 })
         * Matrix::rotation_y(std::f32::consts::PI)
@@ -100,7 +100,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // ceiling
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: 0.0, y: 5.0, z: 0.0, },
         Vec3 { x: 0.0, y: -1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
@@ -114,7 +114,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // floor
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: 0.0, y: -5.0, z: 0.0, },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
@@ -129,7 +129,7 @@ fn construct_room_scene() -> ObjectVec {
 
     
     // left wall
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: -5.0, y: 0.0, z: 0.0, },
         Vec3 { x: 1.0, y: 0.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
@@ -143,7 +143,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // right wall
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: 5.0, y: 0.0, z: 0.0, },
         Vec3 { x: -1.0, y: 0.0, z: 0.0 },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
@@ -157,7 +157,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // back wall
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: -15.0, },
         Vec3 { x: 0.0, y: 0.0, z: 1.0 },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },
@@ -171,7 +171,7 @@ fn construct_room_scene() -> ObjectVec {
     )));
 
     // near wall
-    objs.push(Box::new(Plane::new(
+    objs.push(ObjectEnum::Plane(Plane::new(
         Vec3 { x: 0.0, y: 0.0, z: 1.0, },
         Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         Vec3 { x: 0.0, y: 1.0, z: 0.0 },

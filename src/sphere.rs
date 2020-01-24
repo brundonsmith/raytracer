@@ -4,10 +4,9 @@ use std::f32::consts::PI;
 
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::object::Object;
+use crate::object::{Object,ObjectEnum};
 use crate::intersection::Intersection;
 use crate::material::Material;
-use crate::utils::ObjectVec;
 use crate::illumination::Illumination;
 use crate::utils::{TWO_PI,color_to_normal,adjusted_for_normal};
 
@@ -113,7 +112,7 @@ impl Object for Sphere {
     }
 
 //    #[flame("Sphere")]
-    fn shade(&self, ray: &Ray, objs: &ObjectVec, rng: &mut SmallRng, depth: u8) -> Illumination {
+    fn shade(&self, ray: &Ray, objs: &Vec<ObjectEnum>, rng: &mut SmallRng, bounces_remaining: u8) -> Illumination {
         let mut intersection = self.intersection(ray).unwrap();
         let uv = self.texture_coordinate(&intersection.position);
 
@@ -122,7 +121,7 @@ impl Object for Sphere {
             uv,
             objs,
             rng,
-            depth
+            bounces_remaining
         )
     }
 }

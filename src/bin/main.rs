@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::io::Write;
 use std::time::{Instant};
 
-use raytracer::fidelity_consts::{RESOLUTION,MAX_DEPTH,CELLS,TOTAL_BUFFER_SIZE,CELL_SIZE};
+use raytracer::fidelity_consts::{RESOLUTION,BOUNCES,CELLS,TOTAL_BUFFER_SIZE,CELL_SIZE};
 use raytracer::frame::Frame;
 use raytracer::utils::clamp;
 use raytracer::scenes::{
@@ -29,8 +29,8 @@ use raytracer::scenes::{
     construct_wallpaper_scene_2,
     construct_tree_scene};
 use raytracer::cast::cast_ray;
-use raytracer::utils::{ObjectVec};
 use raytracer::color::Color;
+use raytracer::object::ObjectEnum;
 
 
 fn main() {
@@ -46,7 +46,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs = construct_room_scene();
+    let objs: Vec<ObjectEnum> = construct_room_scene();
 
     // Create frame
     let mut frame = Frame::new();
@@ -54,7 +54,7 @@ fn ray_trace<'a>() -> Frame {
 
     // Create thread wrappers
     let frame_mutex_arc: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut frame));
-    let objs_arc: Arc<&ObjectVec> = Arc::new(&objs);
+    let objs_arc: Arc<&Vec<ObjectEnum>> = Arc::new(&objs);
     let cells_done_mutex_arc = Arc::new(Mutex::new(&mut cells_done));
 
     // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
@@ -99,7 +99,7 @@ fn ray_trace<'a>() -> Frame {
 /**
  * Raytrace one square sub-portion of the image (exists to facilitate threading)
  */
-fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&ObjectVec>, mut rng: SmallRng, start: usize, end: usize) {
+fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<ObjectEnum>>, mut rng: SmallRng, start: usize, end: usize) {
     let mut buffer = [Color(0.0,0.0,0.0); CELL_SIZE];
     let range = end - start;
 
@@ -108,7 +108,7 @@ fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&ObjectVec>, mu
         let xy = Frame::pos_from_index(i + start);
         let ray = Frame::pixel_to_ray(&xy);
 
-        let illumination = cast_ray(&ray, &objs, &mut rng, MAX_DEPTH);
+        let illumination = cast_ray(&ray, &objs, &mut rng, BOUNCES);
 
         buffer[i] = illumination.color * clamp(illumination.intensity, 0.0, 1.0);
     }
