@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::io::Write;
 use std::time::{Instant};
 
-use raytracer::fidelity_consts::{RESOLUTION,BOUNCES,CELLS,TOTAL_BUFFER_SIZE,CELL_SIZE};
+use raytracer::fidelity_consts::{RESOLUTION,BOUNCES,THREADS,TOTAL_BUFFER_SIZE,PIXELS_PER_THREAD};
 use raytracer::frame::Frame;
 use raytracer::utils::clamp;
 use raytracer::scenes::{
@@ -46,18 +46,18 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs: Vec<ObjectEnum> = construct_room_scene();
+    let objs: Vec<ObjectEnum> = construct_tree_scene();
 
     // Create frame
     let mut frame = Frame::new();
-    let mut cells_done = 0;
+    let mut threads_done = 0;
 
     // Create thread wrappers
     let frame_mutex_arc: Arc<Mutex<&mut Frame>> = Arc::new(Mutex::new(&mut frame));
     let objs_arc: Arc<&Vec<ObjectEnum>> = Arc::new(&objs);
-    let cells_done_mutex_arc = Arc::new(Mutex::new(&mut cells_done));
+    let threads_done_mutex_arc = Arc::new(Mutex::new(&mut threads_done));
 
-    // ray_trace_cell(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
+    // ray_trace_segment(&mut frame, &objs, 0, 0, RESOLUTION, RESOLUTION);
 
     crossbeam::scope(move |scope| {
         print!("0.00%");
@@ -65,26 +65,26 @@ fn ray_trace<'a>() -> Frame {
 
         let mut meta_rng = thread_rng();
 
-        for cell in 0..CELLS {
-            let start_index = cell * CELL_SIZE;
+        for thread in 0..THREADS {
+            let start_index = thread * PIXELS_PER_THREAD;
             let objs_arc_clone = objs_arc.clone();
             let frame_mutex_arc_clone = frame_mutex_arc.clone();
-            let cells_done_mutex_arc_clone = cells_done_mutex_arc.clone();
+            let threads_done_mutex_arc_clone = threads_done_mutex_arc.clone();
             let rng = SmallRng::from_rng(&mut meta_rng).unwrap();
             
             scope.spawn(move |_| {
-                ray_trace_cell(
+                ray_trace_segment(
                     frame_mutex_arc_clone, 
                     objs_arc_clone, 
                     rng,
                     start_index,
-                    usize::min(start_index + CELL_SIZE, TOTAL_BUFFER_SIZE)
+                    usize::min(start_index + PIXELS_PER_THREAD, TOTAL_BUFFER_SIZE)
                 );
                 
-                let mut cells_done = cells_done_mutex_arc_clone.lock().unwrap();
-                **cells_done = (**cells_done) + 1;
+                let mut threads_done = threads_done_mutex_arc_clone.lock().unwrap();
+                **threads_done = (**threads_done) + 1;
 
-                print!("\r{}%           ", format!("{:.*}", 2, (**cells_done as f32 / CELLS as f32) * 100.0));
+                print!("\r{}%           ", format!("{:.*}", 2, (**threads_done as f32 / THREADS as f32) * 100.0));
                 std::io::stdout().flush().ok().expect("");
             });
         }
@@ -99,8 +99,8 @@ fn ray_trace<'a>() -> Frame {
 /**
  * Raytrace one square sub-portion of the image (exists to facilitate threading)
  */
-fn ray_trace_cell(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<ObjectEnum>>, mut rng: SmallRng, start: usize, end: usize) {
-    let mut buffer = [Color(0.0,0.0,0.0); CELL_SIZE];
+fn ray_trace_segment(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<ObjectEnum>>, mut rng: SmallRng, start: usize, end: usize) {
+    let mut buffer = [Color(0.0,0.0,0.0); PIXELS_PER_THREAD];
     let range = end - start;
 
     // Cast ray from each pixel
