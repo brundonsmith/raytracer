@@ -1,22 +1,42 @@
 
 use crate::color::Color;
 use crate::vec3::Vec3;
+use crate::matrix::{Matrix,IDENTITY};
 use crate::ray::Ray;
 use crate::fidelity_consts::{RESOLUTION_X,RESOLUTION_Y,TOTAL_BUFFER_SIZE};
 
-const CAMERA_HEIGHT: f32 = 2.0;
-const CAMERA_WIDTH: f32 = CAMERA_HEIGHT * 1.6;
-const FOCAL_LENGTH: f32 = 2.0;
-const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-const CAMERA_TOP_LEFT: Vec3 = Vec3 { 
-    x: CAMERA_POSITION.x - CAMERA_WIDTH / 2.0, 
-    y: CAMERA_POSITION.y + CAMERA_HEIGHT / 2.0, 
-    z: CAMERA_POSITION.z - FOCAL_LENGTH
+
+const CAMERA_POSITION: Vec3 = Vec3 { 
+    x: 0.0, 
+    y: 0.0, 
+    z: 0.0 
 };
 
+// construct within a function so as to further scope these constants
+fn construct_camera_matrix() -> Matrix {
+    let camera_height: f32 = 2.0;
+    let camera_width: f32 = camera_height * 1.6;
+    let focal_length: f32 = 2.0;
+    
+    return IDENTITY
+        //* Matrix::rotation_x(-1.0 / 4.0 * std::f32::consts::PI)
+        * Matrix::translation(&Vec3 { 
+            x: -1.0 * camera_width / 2.0 + CAMERA_POSITION.x, 
+            y: camera_height / 2.0 + CAMERA_POSITION.y, 
+            z: -1.0 * focal_length + CAMERA_POSITION.z
+        })
+        * Matrix::scale(&Vec3 { 
+            x: camera_width / RESOLUTION_X as f32, 
+            y: -1.0 * camera_height / RESOLUTION_Y as f32, 
+            z: 1.0 
+        });
+}
 
-const UNITS_PER_PIXEL_X: f32 = CAMERA_WIDTH / RESOLUTION_X as f32;
-const UNITS_PER_PIXEL_Y: f32 = CAMERA_HEIGHT / RESOLUTION_Y as f32;
+// HACK: .cos() isn't a const fn, for some reason, so lazy_static is 
+// required to initialize this matrix
+lazy_static! {
+    static ref CAMERA_MARTIX: Matrix = construct_camera_matrix();
+}
 
 pub struct Frame {
     pub buffer: Box<[Color]>,
@@ -49,12 +69,12 @@ impl Frame {
     /**
      * Find the world position of a pixel in this frame.
      */
-    pub fn pixel_to_world(pixel: &(usize,usize)) -> Vec3 {
+    fn pixel_to_world(pixel: &(usize,usize)) -> Vec3 {
         Vec3 { 
-            x: CAMERA_TOP_LEFT.x + (0.5 + pixel.0 as f32) * UNITS_PER_PIXEL_X,
-            y: CAMERA_TOP_LEFT.y - (0.5 + pixel.1 as f32) * UNITS_PER_PIXEL_Y,
-            z: CAMERA_TOP_LEFT.z
-        }
+            x: pixel.0 as f32,
+            y: pixel.1 as f32,
+            z: 0.0
+        }.transformed(&CAMERA_MARTIX)
     }
 
     /**

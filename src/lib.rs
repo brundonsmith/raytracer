@@ -1,4 +1,7 @@
 
+#[macro_use]
+extern crate lazy_static;
+
 pub mod color;
 pub mod fidelity_consts;
 pub mod frame;
