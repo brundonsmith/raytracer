@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::io::Write;
 use std::time::{Instant};
 
-use raytracer::fidelity_consts::{RESOLUTION,BOUNCES,THREADS,TOTAL_BUFFER_SIZE,PIXELS_PER_THREAD};
+use raytracer::fidelity_consts::{RESOLUTION_X,RESOLUTION_Y,BOUNCES,THREADS,TOTAL_BUFFER_SIZE,PIXELS_PER_THREAD};
 use raytracer::frame::Frame;
 use raytracer::utils::clamp;
 use raytracer::scenes::{
@@ -46,7 +46,7 @@ fn ray_trace<'a>() -> Frame {
     let start_time = Instant::now();
     
     // Create list of objects
-    let objs: Vec<ObjectEnum> = construct_tree_scene();
+    let objs: Vec<ObjectEnum> = construct_room_scene();
 
     // Create frame
     let mut frame = Frame::new();
@@ -130,10 +130,10 @@ fn ray_trace_segment(frame_mutex: Arc<Mutex<&mut Frame>>, objs: Arc<&Vec<ObjectE
 fn write_image(ray_frame: &Frame) {
     println!("Writing to png...");
 
-    let mut image: ImageBuffer::<Rgb<u8>,Vec<u8>> = ImageBuffer::new(RESOLUTION as u32, RESOLUTION as u32);
+    let mut image: ImageBuffer::<Rgb<u8>,Vec<u8>> = ImageBuffer::new(RESOLUTION_X as u32, RESOLUTION_Y as u32);
 
-    for x in 0..RESOLUTION {
-        for y in 0..RESOLUTION {
+    for x in 0..RESOLUTION_X {
+        for y in 0..RESOLUTION_Y {
             let color = ray_frame.get(x, y);
             image.get_pixel_mut(x as u32, y as u32).0 = color.to_u8();
         }

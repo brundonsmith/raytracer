@@ -2,10 +2,10 @@
 use crate::color::Color;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
-use crate::fidelity_consts::{RESOLUTION,TOTAL_BUFFER_SIZE};
+use crate::fidelity_consts::{RESOLUTION_X,RESOLUTION_Y,TOTAL_BUFFER_SIZE};
 
-const CAMERA_WIDTH: f32 = 2.0;
 const CAMERA_HEIGHT: f32 = 2.0;
+const CAMERA_WIDTH: f32 = CAMERA_HEIGHT * 1.6;
 const FOCAL_LENGTH: f32 = 2.0;
 const CAMERA_POSITION: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 const CAMERA_TOP_LEFT: Vec3 = Vec3 { 
@@ -15,8 +15,8 @@ const CAMERA_TOP_LEFT: Vec3 = Vec3 {
 };
 
 
-const UNITS_PER_PIXEL_X: f32 = CAMERA_WIDTH / RESOLUTION as f32;
-const UNITS_PER_PIXEL_Y: f32 = CAMERA_HEIGHT / RESOLUTION as f32;
+const UNITS_PER_PIXEL_X: f32 = CAMERA_WIDTH / RESOLUTION_X as f32;
+const UNITS_PER_PIXEL_Y: f32 = CAMERA_HEIGHT / RESOLUTION_Y as f32;
 
 pub struct Frame {
     pub buffer: Box<[Color]>,
@@ -39,11 +39,11 @@ impl Frame {
     }
 
     fn index(x: usize, y: usize) -> usize {
-        x + y * RESOLUTION
+        x + y * RESOLUTION_X
     }
 
     pub fn pos_from_index(index: usize) -> (usize,usize) {
-        (index % RESOLUTION, index / RESOLUTION)
+        (index % RESOLUTION_X, index / RESOLUTION_X)
     }
 
     /**
