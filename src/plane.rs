@@ -25,9 +25,9 @@ impl Plane {
 
         Self {
             position,
-            normal,
+            normal: normal.normalized(),
             material,
-            projected_bias,
+            projected_bias: projected_bias.normalized(),
             rotated_projected_bias: projected_bias.rotated_around(&normal, -1.0 * PI_OVER_TWO).normalized()
         }
     }
@@ -55,17 +55,22 @@ impl Object for Plane {
 
 //    #[flame("Plane")]
     fn texture_coordinate(&self, point: &Vec3) -> (f32,f32) {
-        let plane_projection = self.projection(point);
+        let point_projected_on_plane = self.projection(point);
 
-        let proj_y = plane_projection.projected_on(&self.projected_bias);
-        let difference_vec_y = &plane_projection - &proj_y;
+        let proj_y = point_projected_on_plane.projected_on(&self.projected_bias);
+        let difference_vec_y = &point_projected_on_plane - &proj_y;
         let u = difference_vec_y.x.signum() * difference_vec_y.len() / 2.0;
 
-        let proj_x = plane_projection.projected_on(&self.rotated_projected_bias);
-        let difference_vec_x = &plane_projection - &proj_x;
+        let proj_x = point_projected_on_plane.projected_on(&self.rotated_projected_bias);
+        let difference_vec_x = &point_projected_on_plane - &proj_x;
         let v = difference_vec_x.y.signum() * difference_vec_x.len() / 2.0;
 
-        (u - u.floor(), v - v.floor())
+        (
+            if u < 0.0 { 1.0 - u.fract() }
+            else { u.fract() }, 
+            if v < 0.0 { 1.0 - v.fract() }
+            else { v.fract() }
+        )
     }
 
 //    #[flame("Plane")]
