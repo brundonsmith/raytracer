@@ -35,7 +35,7 @@ pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<I
 
         return Some(Intersection::new(
             distance,
-            &point + &(normal * 0.01), // offset to avoid floating-point error
+            &point + &(normal * 0.001), // offset to avoid floating-point error
             *normal,
             ray.direction,
         ));

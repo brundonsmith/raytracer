@@ -29,6 +29,11 @@ impl Sphere {
     }
 
     /*
+    pub fn contains(&self, vec: &Vec3) -> bool {
+        (vec - &self.position).len_squared() < self.radius_squared
+    }*/
+
+    /*
     pub fn surface_point(&self, latitude: f32, longitude: f32) -> Vec3 {
         let lat_cos = latitude.cos();
         let lon_sin = longitude.sin();
@@ -81,7 +86,7 @@ impl Object for Sphere {
 
                 return Some(Intersection::new(
                     distance,
-                    &position + &(&normal * 0.01), // offset to avoid floating-point error
+                    &position + &(&normal * 0.001), // offset to avoid floating-point error
                     normal,
                     direction,
                 ));
