@@ -114,9 +114,10 @@ impl Mesh {
     
     fn inner_intersection(&self, ray: &Ray) -> Option<(Intersection,usize)> {
 //        flame::start("Mesh::sphere_intersect");
-        let sphere_intersect = self.bounding_sphere.intersection(ray);
+        //let sphere_intersect = self.bounding_sphere.intersection(ray);
 //        flame::end("Mesh::sphere_intersect");
-        if sphere_intersect.is_none() {
+
+        if self.bounding_sphere.intersection(ray).is_none() {
             return None;
         } else {
             let mut nearest_intersection: Option<(Intersection,usize)> = None;
@@ -190,15 +191,12 @@ fn get_bounding_sphere(vertices: &Vec<Vec3>) -> Sphere {
         z: (min.z + max.z) / 2.0,
     };
 
-    let radius =
-        f32::max(f32::abs(max.x - center.x),
-        f32::max(f32::abs(max.y - center.y),
-        f32::max(f32::abs(max.z - center.z),
-        f32::max(f32::abs(min.x - center.x),
-        f32::max(f32::abs(min.y - center.y),
-        f32::max(f32::abs(min.z - center.z), 0.0))))));
+    let mut radius = 0.0;
+    for v in vertices {
+        radius = f32::max(radius, (v - &center).len());
+    }
 
-    return Sphere::new(center, radius, Material::new());
+    return Sphere::new(center, radius + 0.001, Material::new());
 }
 
 impl Object for Mesh {
