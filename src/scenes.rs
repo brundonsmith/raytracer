@@ -481,6 +481,69 @@ pub fn construct_wallpaper_scene_2() -> Vec<ObjectEnum> {
     return objs;
 }
 
+pub fn construct_wallpaper_scene_3() -> Vec<ObjectEnum> {
+    let mut objs: Vec<ObjectEnum> = Vec::new();
+
+    // sky
+    /*
+    objs.push(ObjectEnum::Sphere(Sphere::new(
+        Vec3 { x: 0.0, y: -3.0, z: -5.0 },
+        1000.0,
+        Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission_color: Some(Texture::Solid(Color(0.8470588235294118, 0.9529411764705882, 1.0))),
+            texture_emission_intensity: Some(Texture::Solid(Color::gray(1.0))),
+        }
+    )));*/
+
+    // sun
+    /*
+    objs.push(ObjectEnum::Sphere(Sphere::new(
+        Vec3 { x: 10.0, y: 10.0, z: 10.0 },
+        5.0,
+        Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission_color: Some(Texture::Solid(Color(1.0, 0.95, 0.8))),
+            texture_emission_intensity: Some(Texture::Solid(Color::gray(10.0))),
+        }
+    )));*/
+
+    
+    // ceiling
+    
+    objs.push(ObjectEnum::Plane(Plane::new(
+        Vec3 { x: 0.0, y: 5.0, z: 0.0, },
+        Vec3 { x: 0.0, y: -1.0, z: 0.0 },
+        Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        Material {
+            texture_albedo: None,
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission_color: Some(Texture::Solid(Color(0.8470588235294118, 0.9529411764705882, 1.0))),
+            texture_emission_intensity: Some(Texture::Solid(Color::gray(1.0))),
+        }
+    )));
+
+    // room
+    objs.push(ObjectEnum::Mesh(Mesh::from_obj(
+        "/Users/brundolf/git/raytracer/Room.obj", 
+        &Matrix::translation(&Vec3 { x: 0.0, y: -3.0, z: -5.0 }),
+        Some(Material {
+            texture_albedo: Some(Texture::Solid(Color::gray(1.0))),
+            texture_specular: None,
+            texture_normal: None,
+            texture_emission_color: None,
+            texture_emission_intensity: None,
+        })
+    )));
+
+    return objs;
+}
+
 const COUNT_X: usize = 8;
 const COUNT_Z: usize = 4;
 const SPACING: f32 = 2.0;
