@@ -20,9 +20,7 @@ pub fn load_and_parse(path: &str) -> HashMap<String,Material> {
             HashMap::new()
         }
     };
-    
-    println!("done");
-    
+        
     return mats;
 }
 

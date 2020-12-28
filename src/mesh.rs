@@ -99,8 +99,6 @@ impl Mesh {
         }
 
         let bounding_sphere = get_bounding_sphere(&vertices);
-
-        println!("done");
         
         return Self {
             materials,
