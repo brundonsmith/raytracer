@@ -240,5 +240,14 @@ fn test_from_to() {
 
     let rotation = Matrix::from_to_rotation(&from, &to);
 
-    assert_eq!(&to, &from.transformed(&rotation));
+    let transformed = from.transformed(&rotation);
+
+    let to = Vec3 { x: round_3_decimals(to.x), y: round_3_decimals(to.y), z: round_3_decimals(to.z) };
+    let transformed = Vec3 { x: round_3_decimals(transformed.x), y: round_3_decimals(transformed.y), z: round_3_decimals(transformed.z) };
+
+    assert_eq!(&to, &transformed);
+}
+
+fn round_3_decimals(x: f32) -> f32 {
+    (x * 1000.0).round() / 1000.0
 }

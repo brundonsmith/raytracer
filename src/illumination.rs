@@ -16,8 +16,10 @@ impl Illumination {
             intensity: 0.0,
         }
     }
-    pub fn combined(a: &Illumination, b: &Illumination, t: f32) -> Self {
+    pub fn combined(a: &Illumination, b: &Illumination) -> Self {
         let total_intensity = a.intensity + b.intensity;
+
+        let t = a.intensity / total_intensity;
 
         Illumination {
             //(a.color * (a.intensity / total_intensity)) + (b.color * (b.intensity / total_intensity))
