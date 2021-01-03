@@ -22,6 +22,7 @@ impl Vec3 {
         }
     }
 
+    /// alpha is "around", beta is "away"
     pub fn from_angles(alpha: f32, beta: f32) -> Self {
         Self {
             x: alpha.cos() * beta.cos(),
