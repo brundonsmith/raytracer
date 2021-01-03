@@ -22,7 +22,7 @@ pub fn avg(a: f32, b: f32) -> f32 {
 }
 
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    t * (b - a).abs() + f32::min(a, b)
+    a + t * (b - a)
 }
 
 pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<Intersection> {

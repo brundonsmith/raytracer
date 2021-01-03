@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use rand::rngs::SmallRng;
 //use flamer::flame;
 
-use crate::illumination::{Illumination,integrate};
+use crate::{fidelity_consts::{SAMPLE_COUNT_ANGULAR, SAMPLE_COUNT_RADIAL}, illumination::{Illumination,integrate}, matrix::Matrix, utils::TWO_PI};
 use crate::texture::Texture;
 use crate::color::Color;
 use crate::vec3::Vec3;
@@ -60,7 +60,7 @@ impl Material {
                 } else {
                     let diffuse_illumination: Option<Illumination> = self.texture_albedo.as_ref().map(|texture| {
                         let surface_color = texture.color_at(uv);
-                        let sample_rays = get_sample_rays(intersection, valid_diffuse_sample, rng, PI_OVER_TWO);
+                        let sample_rays = get_sample_rays(intersection.position, &intersection.normal, rng, PI_OVER_TWO);
 
                         let mut samples = [Illumination::new();SAMPLE_COUNT];
                         for i in 0..SAMPLE_COUNT {
@@ -75,17 +75,18 @@ impl Material {
                         }
                     });
 
-                    let specular_illumination: Option<(Illumination,f32)> = self.texture_specular.as_ref().map(|texture| {
+                    let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
                         let specularity = texture.color_at(uv).0;
 
                         if specularity > 0.99 {
                             // if reflection is nearly perfect, just cast a single sample ray to avoid work
-                            return (cast_ray(&Ray {
+                            return cast_ray(&Ray {
                                 origin: intersection.position,
-                                direction: intersection.reflected_direction().clone()
-                            }, objs, rng, bounces_remaining - 1), specularity);
+                                direction: *intersection.reflected_direction()
+                            }, objs, rng, bounces_remaining - 1);
                         } else {
-                            let sample_rays = get_sample_rays(intersection, valid_specular_sample, rng, (1.0 - specularity) * PI_OVER_TWO);
+                            let reflected = intersection.reflected_direction().clone();
+                            let sample_rays = get_sample_rays(intersection.position, &reflected, rng, (1.0 - specularity) * PI_OVER_TWO);
 
                             let mut samples = [Illumination::new();SAMPLE_COUNT];
                             for i in 0..SAMPLE_COUNT {
@@ -94,21 +95,21 @@ impl Material {
                             
                             let illumination = integrate(&samples);
 
-                            return (illumination,specularity);
+                            return illumination;
                         }
                     });
 
                     match diffuse_illumination {
                         Some(diffuse) => {
                             match specular_illumination {
-                                Some((illumination, specularity)) => 
-                                    Illumination::combined(&diffuse, &illumination, specularity),
+                                Some(specular_illumination) => 
+                                    Illumination::combined(&diffuse, &specular_illumination),
                                 None => diffuse
                             }
                         },
                         None => {
                             match specular_illumination {
-                                Some((illumination, _specularity)) => illumination,
+                                Some(specular_illumination) => specular_illumination,
                                 None => BACKGROUND_ILLUMINATION
                             }
                         }
@@ -119,23 +120,15 @@ impl Material {
     }
 }
 
-fn valid_diffuse_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    sample_ray.direction.angle(&intersection.normal) < range
-}
-
-fn valid_specular_sample(intersection: &mut Intersection, sample_ray: &Ray, range: f32) -> bool {
-    sample_ray.direction.angle(&intersection.reflected_direction()) < range
-}
-
-fn get_sample_rays<F: Fn(&mut Intersection, &Ray, f32) -> bool>(intersection: &mut Intersection, predicate: F, rng: &mut SmallRng, range: f32) -> [Ray;SAMPLE_COUNT] {
+fn get_sample_rays(position: Vec3, direction: &Vec3, rng: &mut SmallRng, range: f32) -> [Ray;SAMPLE_COUNT] {
     let mut rays = [Ray::new();SAMPLE_COUNT];
     
     let mut i = 0;
     while i < SAMPLE_COUNT {
-        let ray = Ray::random_direction(intersection.position, rng);
+        let ray = Ray::random_direction(position, rng);
 
         // HACK: Figure out a way to *generate* rays that are already within our desired area
-        if predicate(intersection, &ray, range) {
+        if ray.direction.angle(direction) < range {
             rays[i] = ray;
             i += 1;
         }
