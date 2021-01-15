@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use rand::rngs::SmallRng;
 //use flamer::flame;
 
-use crate::{fidelity_consts::{SAMPLE_COUNT_ANGULAR, SAMPLE_COUNT_RADIAL}, illumination::{Illumination,integrate}, matrix::Matrix, utils::TWO_PI};
+use crate::{illumination::{Illumination,integrate}};
 use crate::texture::Texture;
 use crate::color::Color;
 use crate::vec3::Vec3;
@@ -77,15 +77,15 @@ impl Material {
 
                     let specular_illumination: Option<Illumination> = self.texture_specular.as_ref().map(|texture| {
                         let specularity = texture.color_at(uv).0;
+                        let reflected = *intersection.reflected_direction();
 
                         if specularity > 0.99 {
                             // if reflection is nearly perfect, just cast a single sample ray to avoid work
-                            return cast_ray(&Ray {
+                            cast_ray(&Ray {
                                 origin: intersection.position,
-                                direction: *intersection.reflected_direction()
-                            }, objs, rng, bounces_remaining - 1);
+                                direction: reflected
+                            }, objs, rng, bounces_remaining - 1)
                         } else {
-                            let reflected = intersection.reflected_direction().clone();
                             let sample_rays = get_sample_rays(intersection.position, &reflected, rng, (1.0 - specularity) * PI_OVER_TWO);
 
                             let mut samples = [Illumination::new();SAMPLE_COUNT];
@@ -93,9 +93,7 @@ impl Material {
                                 samples[i] = cast_ray(&sample_rays[i], objs, rng, bounces_remaining - 1);
                             }
                             
-                            let illumination = integrate(&samples);
-
-                            return illumination;
+                            integrate(&samples)
                         }
                     });
 

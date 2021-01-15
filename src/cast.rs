@@ -19,28 +19,22 @@ const BACKGROUND_ILLUMINATION: Illumination = Illumination { color: Color(0.0, 0
 //#[flame]
 pub fn cast_ray(ray: &Ray, objs: &Vec<ObjectEnum>, rng: &mut SmallRng, bounces_remaining: u8) -> Illumination {
     let mut nearest_intersection: Option<Intersection> = None;
-    let mut nearest_object_index: Option<usize> = None;
+    let mut nearest_object: Option<&ObjectEnum> = None;
 
 
     // Find nearest object intersection
     for index in 0..objs.len() {
-        match objs[index].intersection(&ray) {
-            Some(intersection) => {
-                if intersection.distance < nearest_intersection.as_ref().map(|int| int.distance).unwrap_or(std::f32::INFINITY) {
-                    nearest_intersection = Some(intersection);
-                    nearest_object_index = Some(index);
-                }
-            },
-            _ => ()
+        if let Some(intersection) = objs[index].intersection(&ray) {
+            if intersection.distance < nearest_intersection.as_ref().map(|int| int.distance).unwrap_or(std::f32::INFINITY) {
+                nearest_intersection = Some(intersection);
+                nearest_object = Some(&objs[index]);
+            }
         }
     }
 
     // Compute total illumination at this intersection
-    let nearest_illumination: Illumination = nearest_object_index
-        .map(|object_index| {
-            let nearest_object = &objs[object_index];
-            nearest_object.shade(ray, objs, rng, bounces_remaining)
-        })
+    let nearest_illumination: Illumination = nearest_object
+        .map(|obj| obj.shade(ray, objs, rng, bounces_remaining))
         .unwrap_or(BACKGROUND_ILLUMINATION);
 
     return nearest_illumination;

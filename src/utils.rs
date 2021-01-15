@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use crate::object::{ObjectEnum};
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::intersection::Intersection;
@@ -33,15 +32,15 @@ pub fn plane_intersection(position: &Vec3, normal: &Vec3, ray: &Ray) -> Option<I
     if distance > 0.0 {
         let point = &ray.origin + &(&ray.direction * distance);
 
-        return Some(Intersection::new(
+        Some(Intersection::new(
             distance,
             &point + &(normal * 0.001), // offset to avoid floating-point error
             *normal,
             ray.direction,
-        ));
+        ))
     } else {
-        return None;
-    };
+        None
+    }
 }
 
 const FORWARD: Vec3 = Vec3 { x: 0.0, y: 0.0, z: -1.0 };

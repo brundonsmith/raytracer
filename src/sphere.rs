@@ -59,7 +59,7 @@ impl Object for Sphere {
         let b: f32 = 2.0 * ray.direction.dot(&l);
         let c: f32 = l.dot(&l) - self.radius_squared;
 
-        return match solve_quadratic(a, b, c) {
+        match solve_quadratic(a, b, c) {
             Some((mut t0, t1)) => {
 
                 if t0 < 0.0 {
@@ -74,25 +74,21 @@ impl Object for Sphere {
                 let position = &ray.origin + &(&ray.direction * distance);
                 let mut normal = &position - &self.position;
                 normal.normalize();
-                normal = match self.material.texture_normal.as_ref() {
-                    Some(texture_normal) => {
-                        let normal_color = texture_normal.color_at(self.texture_coordinate(&position));
-                        adjusted_for_normal(&normal, &color_to_normal(&normal_color))
-                    },
-                    None => normal
-                };
 
-                let direction = ray.direction;
+                if let Some(texture_normal) = self.material.texture_normal.as_ref() {
+                    let normal_color = texture_normal.color_at(self.texture_coordinate(&position));
+                    normal = adjusted_for_normal(&normal, &color_to_normal(&normal_color));
+                }
 
-                return Some(Intersection::new(
+                Some(Intersection::new(
                     distance,
                     &position + &(&normal * 0.001), // offset to avoid floating-point error
                     normal,
-                    direction,
-                ));
+                    ray.direction,
+                ))
             },
             None => None
-        };
+        }
     }
 
 //    #[flame("Sphere")]
