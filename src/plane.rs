@@ -59,11 +59,11 @@ impl Object for Plane {
 
         let proj_y = point_projected_on_plane.projected_on(&self.projected_bias);
         let difference_vec_y = &point_projected_on_plane - &proj_y;
-        let u = difference_vec_y.y.signum() * difference_vec_y.len() / 2.0;
+        let u = difference_vec_y.x.signum() * difference_vec_y.len();
 
         let proj_x = point_projected_on_plane.projected_on(&self.rotated_projected_bias);
         let difference_vec_x = &point_projected_on_plane - &proj_x;
-        let v = difference_vec_x.x.signum() * difference_vec_x.len() / 2.0;
+        let v = difference_vec_x.y.signum() * difference_vec_x.len();
 
         (u - u.floor(), v - v.floor())
     }
