@@ -16,7 +16,7 @@ path = "src/bin/main.rs"
 opt-level = 3
 
 [dependencies]
-image = "0.22.3"
+image = "0.23.12"
 crossbeam = "0.7.2"
 lazy_static = "1.4.0"
 #flame = "0.2.2"
